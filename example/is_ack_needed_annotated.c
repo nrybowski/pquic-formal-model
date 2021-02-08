@@ -31,7 +31,7 @@ protoop_arg_t is_ack_needed(picoquic_cnx_t *cnx) {
 
     // modify cnx
 	//cnx->local_parameters.max_packet_size++; // should trigger sat
-	//pkt_ctx->nb_retransmit++;
+	//pkt_ctx->nb_retransmit++; // should sat but currenlty unsat since pointers in structures are not yet checked
     
     // modify inputv0
     //cnx->protoop_inputv[0]++;
@@ -39,40 +39,51 @@ protoop_arg_t is_ack_needed(picoquic_cnx_t *cnx) {
     // modify inputv1
     
     // modify input2
-	path_x->peer_addr_len++;
-	path_x->local_addr_len++;
+	//path_x->peer_addr_len++; //4m7 sat
+	//path_x->local_addr_len++;
 
 
     return (protoop_arg_t) ret;
 }
 
-extern picoquic_cnx_t nd();
 
 int main(void) {
-    picoquic_cnx_t cnx = nd(), cnx0;
-    cnx.protoop_inputc = 3;
+    picoquic_cnx_t cnx, cnx0;
+
+	init__picoquic_cnx_t(&cnx);
+	assume_cp__picoquic_cnx_t(&cnx, &cnx0);
+	// assume pluglet pre
     assume(cnx.protoop_inputc == 3);
 
-    uint64_t current_time;
+    uint64_t current_time = dummy__uint64_t();
+    cnx.protoop_inputv[0] = current_time;
+
+    // TODO
     picoquic_packet_context_enum pc;
-    picoquic_path_t path_x;
+
+    picoquic_path_t path, path0;
+    init__picoquic_path_t(&path);
+	assume_cp__picoquic_path_t(&path, &path0);
+	cnx.protoop_inputv[2] = (protoop_arg_t) &path;
+
     int ret;
-
-    assume_cnx_cp(&cnx, &cnx0);
-
-    current_time = cnx.protoop_inputv[0];
-    // TODO : capture pc
-    assume_path_cp((picoquic_path_t*) &cnx.protoop_inputv[2], &path_x);
 
     ret = is_ack_needed(&cnx);
 
     // TODO : check ret
 
-    sassert(current_time == cnx.protoop_inputv[0]);
+    sassert(current_time == (uint64_t) cnx.protoop_inputv[0]);
     // TODO : check inputv1 : pc
-    assert_path_cmp((picoquic_path_t*) &cnx.protoop_inputv[2], &path_x);
+
+    // assert the structure copy do not point on the same memory address
+    sassert(&path != &path0);
+    // assert the pointer in the context is unchanged
+    sassert(&path == (picoquic_path_t*) cnx.protoop_inputv[2]);
+    // assert the structure pointed by the cnx is left unchanged
+    assert_cp__picoquic_path_t((picoquic_path_t*) cnx.protoop_inputv[2], &path0);
     
-    assert_cnx_cmp(&cnx, &cnx0);
+    sassert(&cnx != &cnx0);
+    assert_cp__picoquic_cnx_t(&cnx, &cnx0);
 
     return 0;
 }
