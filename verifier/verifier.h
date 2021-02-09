@@ -1,6 +1,8 @@
 #include "picoquic_internal.h"
 #include "seahorn/seahorn.h"
 
+/* WARNING : this file is automagically generated. */
+
 extern void dummy_cp__picoquic_cnx_t(picoquic_cnx_t *src, picoquic_cnx_t *dst);
 extern void dummy_cp__picoquic_tp_t(picoquic_tp_t *src, picoquic_tp_t *dst);
 extern void dummy_cp__picoquic_connection_id_t(picoquic_connection_id_t *src, picoquic_connection_id_t *dst);

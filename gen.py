@@ -58,14 +58,78 @@ def gen_signature(ftype, name, params, extern=False):
     return signature
 
 def gen_body(name, ftype, param_names, struct_decls):
+    def gen_body_init():
+
+        i = ' '.join(data['subtype'])
+        a = '_'.join(data['subtype'])
+        if i not in DUMMIES and i in C_DEFINES:
+            # Add dummy init__<subtype>() declaration in the header file
+            DUMMIES.append(i)
+
+        func_call = c_ast.ID('dummy__%s' % a)
+
+        if data['type'] == c_ast.TypeDecl:
+            # param1-><field> = dummy__<data['id']>();
+            body.append(c_ast.Assignment('=', gen_ptr_access(st1, field), c_ast.FuncCall(func_call, None), None))
+
+        elif data['type'] == c_ast.Struct:
+            body.append(c_ast.FuncCall(c_ast.ID('init__%s' % '_'.join(data['subtype'])), c_ast.ExprList([gen_ptr_access(st1, field, make_pointer=True)])))
+
+        elif data['type'] == c_ast.ArrayDecl:
+            if ' '.join(data['subtype']) not in C_DEFINES:
+                # TODO : currently skip array of user defined types since it requires new init functions
+                return
+            for entry in range(0, data['dim']):
+                # param1-><field>[<entry>] = dummy__<data['id']>();
+                body.append(c_ast.Assignment('=', c_ast.ArrayRef(gen_ptr_access(st1, field), c_ast.Constant(c_ast.ID(data['subtype']), str(entry))), c_ast.FuncCall(func_call, None)))
+
+        # elif data['type'] == c_ast.PtrDecl:
+        #    # TODO : currently unsupported
+        #    pass
+
+
+    def gen_body_assume():
+        if data['type'] == c_ast.TypeDecl:
+            # assume(src-><field> == dst-><field>);
+            #body.append(c_ast.FuncCall(c_ast.ID(ftype), c_ast.ExprList([gen_field_comp(st1, st2, field)])))
+            body.append(c_ast.Assignment('=', gen_ptr_access(st2, field), gen_ptr_access(st1, field)))
+
+
+        elif data['type'] == c_ast.Struct:
+            # assume_cp__<subtype>(&src->field, &dst-field);
+            body.append(c_ast.FuncCall(c_ast.ID('%s_cp__%s' % (ftype, ' '.join(data['subtype']))), c_ast.ExprList([gen_ptr_access(st1, field, make_pointer=True), gen_ptr_access(st2, field, make_pointer=True)])))
+        elif data['type'] == c_ast.ArrayDecl:
+            if ' '.join(data['subtype']) not in C_DEFINES:
+                # TODO : currently skip array of user defined types since it requires new init functions
+                return
+            for entry in range(0, data['dim']):
+                # assume(src-><field>[<entry>] == dst-><field>[<entry>]);
+                body.append(c_ast.Assignment('=', c_ast.ArrayRef(gen_ptr_access(st2, field), c_ast.Constant(c_ast.ID(data['subtype']), str(entry))), c_ast.ArrayRef(gen_ptr_access(st1, field), c_ast.Constant(c_ast.ID(data['subtype']), str(entry)))))
+                #body.append(
+                #    c_ast.FuncCall(c_ast.ID(ftype), 
+                #                   c_ast.ExprList([c_ast.BinaryOp('==', 
+                #                       c_ast.ArrayRef(gen_ptr_access(st1, field), c_ast.Constant(c_ast.ID(data['subtype']), str(entry))),
+                #                       c_ast.ArrayRef(gen_ptr_access(st2, field), c_ast.Constant(c_ast.ID(data['subtype']), str(entry))))])))
+
+    def gen_body_assert():
+        if data['type'] == c_ast.TypeDecl:
+            # cond &= src-><field> == dst->field
+            body.append(c_ast.Assignment('&=', c_ast.ID('cond'), gen_field_comp(st1, st2, field)))
+
+        elif data['type'] == c_ast.Struct:
+            # if struct field is another struct, call assume_cp__<sub_struct>
+            body.append(c_ast.FuncCall(c_ast.ID('%s_cp__%s' % (ftype, ' '.join(data['subtype']))), c_ast.ExprList([gen_ptr_access(st1, field, make_pointer=True), gen_ptr_access(st2, field, make_pointer=True)])))
+
+        elif data['type'] == c_ast.ArrayDecl:
+            if ' '.join(data['subtype']) not in C_DEFINES:
+                # TODO : currently skip array of user defined types since it requires new init functions
+                return
+            for entry in range(0, data['dim']):
+                body.append(c_ast.Assignment('&=', c_ast.ID('cond'), c_ast.BinaryOp('==', 
+                                       c_ast.ArrayRef(gen_ptr_access(st1, field), c_ast.Constant(c_ast.ID(data['subtype']), str(entry))),
+                                       c_ast.ArrayRef(gen_ptr_access(st2, field), c_ast.Constant(c_ast.ID(data['subtype']), str(entry))))))
 
     body = []
-    print(struct_decls)
-    """
-    accepted = ['assume', 'sassert', 'init']
-    if ftype not in accepted:
-        return body
-    """
     accepted = list(FTYPES.keys())
     if ftype not in accepted:
         return body
@@ -73,43 +137,29 @@ def gen_body(name, ftype, param_names, struct_decls):
     # Unpack parameters for comparisons
     st1, st2 = param_names if len(param_names) == 2 else (param_names[0], None)
 
+    # Set the first line of the body if required
     if ftype == accepted[0]:
-        body.append(c_ast.FuncCall(c_ast.ID('dummy_cp__%s' % name), c_ast.ExprList([c_ast.ID(st1), c_ast.ID(st2)])))
+        # Add : dummy_cp__<name>(src, dst);
+        #body.append(c_ast.FuncCall(c_ast.ID('dummy_cp__%s' % name), c_ast.ExprList([c_ast.ID(st1), c_ast.ID(st2)])))
+        pass
     elif ftype == accepted[1]:
+        # Add : unsigned int cond = 1;
         body.append(c_ast.Decl('cond', [], [], [], c_ast.TypeDecl('cond', [], c_ast.IdentifierType(['unsigned', 'int'])), c_ast.Constant('int', '1'), None))
 
-    for field, data in struct_decls.items():
-        if data['type'] == c_ast.TypeDecl:
-            # if struct field is not a ptr nor a structure
-            if ftype == accepted[0]:
-                # assume field copy
-                body.append(c_ast.FuncCall(c_ast.ID(ftype), c_ast.ExprList([gen_field_comp(st1, st2, field)])))
-            elif ftype == accepted[1]:
-                # compare fields and store the result in cond
-                body.append(c_ast.Assignment('&=', c_ast.ID('cond'), gen_field_comp(st1, st2, field)))
-            elif ftype == accepted[2]:
-                # ftype = 'init'
-                i = ' '.join(data['id'])
-                a = '_'.join(data['id'])
-                if i in C_DEFINES:
-                    func_call = c_ast.ID('dummy__%s' % a)
-                    body.append(c_ast.Assignment('=', gen_ptr_access(st1, field), c_ast.FuncCall(func_call, None), None))
-                    if i not in DUMMIES:
-                        DUMMIES.append(i)
-                else:
-                    pass
-                    #body.append(c_ast.FuncCall(c_ast.ID('init__%s' % a), c_ast.ExprList([gen_ptr_access(st1, field, make_pointer=True)])))
-        elif data['type'] == c_ast.Struct:
-            if ftype == accepted[2]:
-                body.append(c_ast.FuncCall(c_ast.ID('init__%s' % '_'.join(data['id'])), c_ast.ExprList([gen_ptr_access(st1, field, make_pointer=True)])))
-            else:
-                # if struct field is another struct, call assume_cp__<sub_struct>
-                body.append(c_ast.FuncCall(c_ast.ID('%s_cp__%s' % (ftype, data['id'][-1])), c_ast.ExprList([gen_ptr_access(st1, field, make_pointer=True), gen_ptr_access(st2, field, make_pointer=True)])))
-        elif data['type'] == c_ast.PtrDecl:
-            # currently unsupported
-            pass
+    if ftype == accepted[0]:
+        field_fun = gen_body_assume
+    elif ftype == accepted[1]:
+        field_fun = gen_body_assert
+    elif ftype == accepted[2]:
+        field_fun = gen_body_init
 
+    for field, data in struct_decls.items():
+        # For each field, generates the appropriate data
+        field_fun()
+
+     # Set the last line of the body if required
     if ftype == accepted[1]:
+        # Add : sassert(cond);
         body.append(c_ast.FuncCall(c_ast.ID('sassert'), c_ast.ExprList([c_ast.ID('cond')])))
 
     return body
@@ -132,7 +182,6 @@ def gen_dummy_cp(name):
     params = ['src', 'dst']
 
     return gen_signature(ftype, name, params, extern=True)
-    #return gen_signature(ftype, name, params)
 
 def gen_assume_cp(name, struct):
     ftype = 'assume'
@@ -157,14 +206,9 @@ def gen_init(name, struct):
 """ Parsing part """
 """ ############ """
 
-ast = parse_file('../pquic/picoquic/picoquic_internal.h', use_cpp=True, cpp_path='clang', cpp_args=['-E', r'-I../pycparser/utils/fake_libc_include'])
-
-# Create empty AST
-new_parser = c_parser.CParser()
-new_ast_c = new_parser.parse('')
-new_ast_h = new_parser.parse('')
-
 def parse_ast(ast):
+    """ Parse a pycparser AST into a dict representation
+    """
     ast_dic = {}
     for decl in ast:
 
@@ -181,57 +225,79 @@ def parse_ast(ast):
             if struct.name is None or 'picoquic' not in struct.name:
                 # Remove useless structure definitions
                 continue
-            #decl.type.show()
-            #print()
-
+          
             parsed_struct_decls = {}
             if struct.decls is not None:
-                for struct_decl in struct:
-                    decl_type = struct_decl.type
-                    #decl_type.show()
-                    #print()
+                # If any field in the structure
+                for field_decl in struct:
+                    # Parse each field of the structure
 
-                    if type(decl_type) == c_ast.TypeDecl:
-                        n = decl_type.declname
-                        t = 'type'
-                        sub = decl_type.type
+                    # Get main type of the field
+                    field = field_decl.type
 
-                    elif type(decl_type) == c_ast.PtrDecl:
+                    data = {}
+                    subtype = None
+                    field_subtype = field.type
+                    t = type(field)
+
+                     # Override the subtype if required
+                    if type(field_subtype) == c_ast.IdentifierType:
+                        subtype = field_subtype.names
+                    elif type(field_subtype) == c_ast.Struct:
+                        subtype = [field_subtype.name]
+
+
+                    if type(field) == c_ast.TypeDecl:
+                        # Main type is a "simple" field
+                        field_name = field.declname
+                        field_subtype = field.type
+                        t = type(field) if ' '.join(subtype) in C_DEFINES else c_ast.Struct
+
+                    elif type(field) == c_ast.PtrDecl:
+                        # Main type is a pointer
+
                         # handle double pointers
-                        n = decl_type.type.declname if type(decl_type.type) != c_ast.PtrDecl else decl_type.type.type.declname
-                        t = 'ptr'
-                        id = decl_type.type.type.names if type(decl_type.type.type) == c_ast.IdentifierType else 'UNKOWN'
-                        sub = decl_type.type.type
+                        field_name = field_subtype.declname if type(field_subtype) != c_ast.PtrDecl else field_subtype.type.declname
+                        subtype = field_subtype.type.names if type(field_subtype.type) == c_ast.IdentifierType else 'UNKOWN'
+
+                        # TODO : Need to define subtype of the pointer
+
+                    elif type(field) == c_ast.ArrayDecl:
+                        # Main type is an array
+
+                        if type(field_subtype) == c_ast.PtrDecl:
+                            # Currently skip the array of pointers case
+                            continue
+
+                        field_name = field_subtype.declname
+                        subtype = field_subtype.type.names
+
+                        if type(field.dim) == c_ast.Constant:
+                            # If array has a defined size
+                            data['dim'] = int(field.dim.value)
+                        sub = field_subtype.type
                     else:
                         # TODO : handler other fields types
-                        # ArrayDecl
-                        # PtrDecl
                         continue
 
-                    if type(sub) == c_ast.IdentifierType:
-                        # field is a variable
-                        id = sub.names
-                    elif type(sub) == c_ast.Struct:
-                        # field is a structure
-                        id = [sub.name]
-                    else:
-                        id = 'Unkown'
+                    parsed_struct_decls[field_name] = {**{'type': t}, **data}
 
-                    if type(decl_type) == c_ast.TypeDecl:
-                        t = type(decl_type) if 'picoquic' not in ' '.join(id) else c_ast.Struct
-                    else:
-                        t = type(decl_type)
+                    if subtype is not None:
+                        parsed_struct_decls[field_name]['subtype'] = subtype
 
-                    parsed_struct_decls[n] = {'type': t, 'id': id}
 
             ast_dic[decl.name] = parsed_struct_decls
+
     return ast_dic
 
-        # For each generated function, add it into the AST
-        #new_ast_c.ext.append(gen_dummy_cp(decl.name, parsed_struct_decls))
-        #new_ast_c.ext.append(gen_assume_cp(decl.name, parsed_struct_decls))
-
+ast = parse_file('../pquic/picoquic/picoquic_internal.h', use_cpp=True, cpp_path='clang', cpp_args=['-E', r'-I../pycparser/utils/fake_libc_include'])
 old_ast = parse_ast(ast)
+print(old_ast['picoquic_packet_context_t'])
+
+# Create empty AST
+new_parser = c_parser.CParser()
+new_ast_c = new_parser.parse('')
+new_ast_h = new_parser.parse('')
 
 generated = []
 ungenerable = []
@@ -254,13 +320,14 @@ def fgen(name, struct):
     # Collect additional helper required for current helper
     collect = []
     for data in struct.values():
-        if data['type'] == c_ast.Struct and data['id'][0] not in collect:
-                collect.append(data['id'][0])
+        if data['type'] == c_ast.Struct and ' '.join(data['subtype']) not in collect:
+                collect.append(data['subtype'][0])
 
     # For each additional helper, generated it if possible
     for new_name in collect:
         if new_name in old_ast.keys():
             if new_name not in generated:
+                print('\tRequires %s' % new_name)
                 fgen(new_name, old_ast[new_name])
             else:
                 print('Already generated : %s' % new_name)
@@ -268,7 +335,7 @@ def fgen(name, struct):
             print('Error: %s' % new_name)
             ungenerable.append(new_name)
 
-    cleaned_struct = {i: j for i, j in struct.items() if j['id'][0] not in ungenerable}
+    cleaned_struct = {i: j for i, j in struct.items() if ' '.join(j['subtype']) not in ungenerable}
 
     init_fun, init_sig = gen_init(name, cleaned_struct)
     assume_fun, assume_sig = gen_assume_cp(name, cleaned_struct)
@@ -281,9 +348,10 @@ def fgen(name, struct):
     sassert_signatures.append(assert_sig)
     sassert_implems.append(assert_fun)
 
-
 for struct in ['picoquic_cnx_t', 'picoquic_packet_context_t', 'picoquic_path_t']:
     fgen(struct, old_ast[struct])
+
+print('ungenerable %s' % ungenerable)
 
 TMP_DUMMIES = []
 for dummy in DUMMIES:
@@ -300,24 +368,20 @@ new_ast_c.ext += sassert_implems
 # Generate C code from the new AST
 generator = c_generator.CGenerator()
 
-print('\nHeader file')
+"""print('\nHeader file')
 print(generator.visit(new_ast_h))
 print('C file')
-print(generator.visit(new_ast_c))
+print(generator.visit(new_ast_c))"""
 
 print(C_DEFINES)
 
-"""tmp = new_parser.parse('')
-tmp.ext.append(gen_sassert_cmp('picoquic_packet_context_t', old_ast['picoquic_packet_context_t'])[0])
-print(generator.visit(tmp))
-"""
-
 with open('verifier/verifier.c', 'w') as fp:
     fp.write('#include "verifier/verifier.h"\n\n')
-    #fp.write('#include "tmp.h"\n\n')
+    fp.write('/* WARNING : this file is automagically generated. */\n\n')
     fp.write(generator.visit(new_ast_c))
 
 with open('verifier/verifier.h', 'w') as fp:
     fp.write('#include "picoquic_internal.h"\n')
     fp.write('#include "seahorn/seahorn.h"\n\n')
+    fp.write('/* WARNING : this file is automagically generated. */\n\n')
     fp.write(generator.visit(new_ast_h))
