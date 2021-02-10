@@ -1,0 +1,12 @@
+{
+	"name": "update_ack_delay",
+	"inputs": {
+		"pkt_ctx": ["picoquic_packet_context_t", "*"],
+		"old_path": ["picoquic_path_t", "*"],
+		"rtt_estimate": ["int64_t"],
+		"first_estimate": ["bool"]
+	},
+	"effects": {
+		"pkt_ctx": ["ack_delay_local"]
+	}
+}
