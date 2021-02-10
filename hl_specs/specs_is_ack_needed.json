@@ -1,0 +1,9 @@
+{
+	"name": "is_ack_needed",
+	"inputs": {
+		"current_time": ["uint64_t"],
+		"pc": ["picoquic_packet_context_enum"],
+		"path_x": ["picoquic_path_t", "*"]
+	},
+	"effects": {}
+}
