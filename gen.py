@@ -7,6 +7,8 @@ C_DEFINES += ['uint8_t', 'uint16_t', 'uint64_t', 'uint32_t', 'size_t']
 DUMMIES = []
 FTYPES = {'assume': 'assume_cp__', 'assert': 'assert_cp__', 'init': 'init__', 'dummy_cp': 'dummy_cp__', 'dummy_init': 'dummy__'}
 
+VERIFIER_H_DEFINES = ['#define ASSERT_NONE 0x0']
+
 """ ############### """
 """ Generation part """
 """ ############### """
@@ -19,7 +21,7 @@ def gen_field_comp(st1, st2, field):
     right = gen_ptr_access(st2, field)
     return c_ast.BinaryOp('==', left, right)
 
-def gen_signature(ftype, name, params, extern=False):
+def gen_signature(ftype, name, params, extern=False, extra_params={}):
     """ Generate a function signature in the pycparser format
         @in ftype : the function type (@see FTYPES)
         @in name : the structure which requires this function's signature
@@ -38,6 +40,7 @@ def gen_signature(ftype, name, params, extern=False):
 
     # Function's parameters declaration
     l = [c_ast.Decl(param, [], [], [], c_ast.PtrDecl([], c_ast.TypeDecl(param, [], c_ast.IdentifierType([name]))), None, None) for param in params]
+    l += [c_ast.Decl(param, [], [], [], c_ast.TypeDecl(param, [], c_ast.IdentifierType([name])), None, None) for param, name in extra_params.items()]
     param_list = c_ast.ParamList(l)
 
     # Function's output type declaration
@@ -59,9 +62,6 @@ def gen_signature(ftype, name, params, extern=False):
 
 def gen_body(name, ftype, param_names, struct_decls):
     def gen_body_init():
-
-        i = ' '.join(data['subtype'])
-        a = '_'.join(data['subtype'])
         if i not in DUMMIES and i in C_DEFINES:
             # Add dummy init__<subtype>() declaration in the header file
             DUMMIES.append(i)
@@ -114,11 +114,14 @@ def gen_body(name, ftype, param_names, struct_decls):
     def gen_body_assert():
         if data['type'] == c_ast.TypeDecl:
             # cond &= src-><field> == dst->field
-            body.append(c_ast.Assignment('&=', c_ast.ID('cond'), gen_field_comp(st1, st2, field)))
+            # cond &= (flags & <field>) && (src-><field> == dst-><field>)
+            flag = str.upper('ASSERT_%s__%s' % (name, field))
+            VERIFIER_H_DEFINES.append('#define %s %s' % (flag, hex(pow(2, nth_field))))
+            body.append(c_ast.Assignment('&=', c_ast.ID('cond'), c_ast.BinaryOp('||', c_ast.BinaryOp('&', c_ast.ID('flags'), c_ast.ID(str.upper(flag))), gen_field_comp(st1, st2, field))))
 
         elif data['type'] == c_ast.Struct:
             # if struct field is another struct, call assume_cp__<sub_struct>
-            body.append(c_ast.FuncCall(c_ast.ID('%s_cp__%s' % (ftype, ' '.join(data['subtype']))), c_ast.ExprList([gen_ptr_access(st1, field, make_pointer=True), gen_ptr_access(st2, field, make_pointer=True)])))
+            body.append(c_ast.FuncCall(c_ast.ID('%s_cp__%s' % (ftype, ' '.join(data['subtype']))), c_ast.ExprList([gen_ptr_access(st1, field, make_pointer=True), gen_ptr_access(st2, field, make_pointer=True), c_ast.ID('0')])))
 
         elif data['type'] == c_ast.ArrayDecl:
             if ' '.join(data['subtype']) not in C_DEFINES:
@@ -143,6 +146,8 @@ def gen_body(name, ftype, param_names, struct_decls):
         #body.append(c_ast.FuncCall(c_ast.ID('dummy_cp__%s' % name), c_ast.ExprList([c_ast.ID(st1), c_ast.ID(st2)])))
         pass
     elif ftype == accepted[1]:
+        # Add : sassert(param1 != param2);
+        body.append(c_ast.FuncCall(c_ast.ID('sassert'), c_ast.ExprList([c_ast.BinaryOp('!=', c_ast.ID(st1), c_ast.ID(st2))])))
         # Add : unsigned int cond = 1;
         body.append(c_ast.Decl('cond', [], [], [], c_ast.TypeDecl('cond', [], c_ast.IdentifierType(['unsigned', 'int'])), c_ast.Constant('int', '1'), None))
 
@@ -153,20 +158,29 @@ def gen_body(name, ftype, param_names, struct_decls):
     elif ftype == accepted[2]:
         field_fun = gen_body_init
 
+    nth_field = 0
+
     for field, data in struct_decls.items():
+
+        i = ' '.join(data['subtype'])
+        a = '_'.join(data['subtype'])
+
         # For each field, generates the appropriate data
         field_fun()
 
-     # Set the last line of the body if required
+        if data['type'] == c_ast.TypeDecl:
+            nth_field += 1
+
+    # Set the last line of the body if required
     if ftype == accepted[1]:
         # Add : sassert(cond);
         body.append(c_ast.FuncCall(c_ast.ID('sassert'), c_ast.ExprList([c_ast.ID('cond')])))
 
     return body
 
-def gen_function(ftype, name, params, struct):
+def gen_function(ftype, name, params, struct, extra_params={}):
     # Generate signature
-    signature = gen_signature(ftype, name, params)
+    signature = gen_signature(ftype, name, params, extra_params=extra_params)
 
     # Generate function body
     body = gen_body(name, ftype, params, struct)
@@ -193,7 +207,7 @@ def gen_assert_cp(name, struct):
     ftype = 'assert'
     params = ['param1', 'param2']
 
-    return gen_function(ftype, name, params, struct)
+    return gen_function(ftype, name, params, struct, extra_params={'flags': 'uint64_t'})
 
 def gen_init(name, struct):
     ftype = 'init'
@@ -327,7 +341,7 @@ def fgen(name, struct):
     for new_name in collect:
         if new_name in old_ast.keys():
             if new_name not in generated:
-                print('\tRequires %s' % new_name)
+                print('Requires %s' % new_name)
                 fgen(new_name, old_ast[new_name])
             else:
                 print('Already generated : %s' % new_name)
@@ -384,4 +398,7 @@ with open('verifier/verifier.h', 'w') as fp:
     fp.write('#include "picoquic_internal.h"\n')
     fp.write('#include "seahorn/seahorn.h"\n\n')
     fp.write('/* WARNING : this file is automagically generated. */\n\n')
+    for define in VERIFIER_H_DEFINES:
+        fp.write('%s\n' % define)
+    fp.write('\n')
     fp.write(generator.visit(new_ast_h))

@@ -494,8 +494,9 @@ inline void assume_cp__picoquic_path_t(picoquic_path_t *src, picoquic_path_t *ds
   dst->reset_secret[15] = src->reset_secret[15];
 }
 
-inline void assert_cp__picoquic_connection_id_t(picoquic_connection_id_t *param1, picoquic_connection_id_t *param2)
+inline void assert_cp__picoquic_connection_id_t(picoquic_connection_id_t *param1, picoquic_connection_id_t *param2, uint64_t flags)
 {
+  sassert(param1 != param2);
   unsigned int cond = 1;
   cond &= param1->id[0] == param2->id[0];
   cond &= param1->id[1] == param2->id[1];
@@ -517,18 +518,19 @@ inline void assert_cp__picoquic_connection_id_t(picoquic_connection_id_t *param1
   cond &= param1->id[17] == param2->id[17];
   cond &= param1->id[18] == param2->id[18];
   cond &= param1->id[19] == param2->id[19];
-  cond &= param1->id_len == param2->id_len;
+  cond &= (flags & ASSERT_PICOQUIC_CONNECTION_ID_T__ID_LEN) || (param1->id_len == param2->id_len);
   sassert(cond);
 }
 
-inline void assert_cp__picoquic_tp_preferred_address_t(picoquic_tp_preferred_address_t *param1, picoquic_tp_preferred_address_t *param2)
+inline void assert_cp__picoquic_tp_preferred_address_t(picoquic_tp_preferred_address_t *param1, picoquic_tp_preferred_address_t *param2, uint64_t flags)
 {
+  sassert(param1 != param2);
   unsigned int cond = 1;
   cond &= param1->ipv4_address[0] == param2->ipv4_address[0];
   cond &= param1->ipv4_address[1] == param2->ipv4_address[1];
   cond &= param1->ipv4_address[2] == param2->ipv4_address[2];
   cond &= param1->ipv4_address[3] == param2->ipv4_address[3];
-  cond &= param1->ipv4_port == param2->ipv4_port;
+  cond &= (flags & ASSERT_PICOQUIC_TP_PREFERRED_ADDRESS_T__IPV4_PORT) || (param1->ipv4_port == param2->ipv4_port);
   cond &= param1->ipv6_address[0] == param2->ipv6_address[0];
   cond &= param1->ipv6_address[1] == param2->ipv6_address[1];
   cond &= param1->ipv6_address[2] == param2->ipv6_address[2];
@@ -545,8 +547,8 @@ inline void assert_cp__picoquic_tp_preferred_address_t(picoquic_tp_preferred_add
   cond &= param1->ipv6_address[13] == param2->ipv6_address[13];
   cond &= param1->ipv6_address[14] == param2->ipv6_address[14];
   cond &= param1->ipv6_address[15] == param2->ipv6_address[15];
-  cond &= param1->ipv6_port == param2->ipv6_port;
-  assert_cp__picoquic_connection_id_t(&param1->connection_id, &param2->connection_id);
+  cond &= (flags & ASSERT_PICOQUIC_TP_PREFERRED_ADDRESS_T__IPV6_PORT) || (param1->ipv6_port == param2->ipv6_port);
+  assert_cp__picoquic_connection_id_t(&param1->connection_id, &param2->connection_id, 0);
   cond &= param1->stateless_reset_token[0] == param2->stateless_reset_token[0];
   cond &= param1->stateless_reset_token[1] == param2->stateless_reset_token[1];
   cond &= param1->stateless_reset_token[2] == param2->stateless_reset_token[2];
@@ -566,128 +568,133 @@ inline void assert_cp__picoquic_tp_preferred_address_t(picoquic_tp_preferred_add
   sassert(cond);
 }
 
-inline void assert_cp__picoquic_tp_t(picoquic_tp_t *param1, picoquic_tp_t *param2)
+inline void assert_cp__picoquic_tp_t(picoquic_tp_t *param1, picoquic_tp_t *param2, uint64_t flags)
 {
+  sassert(param1 != param2);
   unsigned int cond = 1;
-  assert_cp__picoquic_connection_id_t(&param1->original_destination_connection_id, &param2->original_destination_connection_id);
-  cond &= param1->max_idle_timeout == param2->max_idle_timeout;
-  cond &= param1->max_packet_size == param2->max_packet_size;
-  cond &= param1->initial_max_data == param2->initial_max_data;
-  cond &= param1->initial_max_stream_data_bidi_local == param2->initial_max_stream_data_bidi_local;
-  cond &= param1->initial_max_stream_data_bidi_remote == param2->initial_max_stream_data_bidi_remote;
-  cond &= param1->initial_max_stream_data_uni == param2->initial_max_stream_data_uni;
-  cond &= param1->initial_max_streams_bidi == param2->initial_max_streams_bidi;
-  cond &= param1->initial_max_streams_uni == param2->initial_max_streams_uni;
-  cond &= param1->ack_delay_exponent == param2->ack_delay_exponent;
-  cond &= param1->max_ack_delay == param2->max_ack_delay;
-  cond &= param1->disable_active_migration == param2->disable_active_migration;
-  assert_cp__picoquic_tp_preferred_address_t(&param1->preferred_address, &param2->preferred_address);
-  cond &= param1->active_connection_id_limit == param2->active_connection_id_limit;
-  assert_cp__picoquic_connection_id_t(&param1->initial_source_connection_id, &param2->initial_source_connection_id);
-  assert_cp__picoquic_connection_id_t(&param1->retry_source_connection_id, &param2->retry_source_connection_id);
+  assert_cp__picoquic_connection_id_t(&param1->original_destination_connection_id, &param2->original_destination_connection_id, 0);
+  cond &= (flags & ASSERT_PICOQUIC_TP_T__MAX_IDLE_TIMEOUT) || (param1->max_idle_timeout == param2->max_idle_timeout);
+  cond &= (flags & ASSERT_PICOQUIC_TP_T__MAX_PACKET_SIZE) || (param1->max_packet_size == param2->max_packet_size);
+  cond &= (flags & ASSERT_PICOQUIC_TP_T__INITIAL_MAX_DATA) || (param1->initial_max_data == param2->initial_max_data);
+  cond &= (flags & ASSERT_PICOQUIC_TP_T__INITIAL_MAX_STREAM_DATA_BIDI_LOCAL) || (param1->initial_max_stream_data_bidi_local == param2->initial_max_stream_data_bidi_local);
+  cond &= (flags & ASSERT_PICOQUIC_TP_T__INITIAL_MAX_STREAM_DATA_BIDI_REMOTE) || (param1->initial_max_stream_data_bidi_remote == param2->initial_max_stream_data_bidi_remote);
+  cond &= (flags & ASSERT_PICOQUIC_TP_T__INITIAL_MAX_STREAM_DATA_UNI) || (param1->initial_max_stream_data_uni == param2->initial_max_stream_data_uni);
+  cond &= (flags & ASSERT_PICOQUIC_TP_T__INITIAL_MAX_STREAMS_BIDI) || (param1->initial_max_streams_bidi == param2->initial_max_streams_bidi);
+  cond &= (flags & ASSERT_PICOQUIC_TP_T__INITIAL_MAX_STREAMS_UNI) || (param1->initial_max_streams_uni == param2->initial_max_streams_uni);
+  cond &= (flags & ASSERT_PICOQUIC_TP_T__ACK_DELAY_EXPONENT) || (param1->ack_delay_exponent == param2->ack_delay_exponent);
+  cond &= (flags & ASSERT_PICOQUIC_TP_T__MAX_ACK_DELAY) || (param1->max_ack_delay == param2->max_ack_delay);
+  cond &= (flags & ASSERT_PICOQUIC_TP_T__DISABLE_ACTIVE_MIGRATION) || (param1->disable_active_migration == param2->disable_active_migration);
+  assert_cp__picoquic_tp_preferred_address_t(&param1->preferred_address, &param2->preferred_address, 0);
+  cond &= (flags & ASSERT_PICOQUIC_TP_T__ACTIVE_CONNECTION_ID_LIMIT) || (param1->active_connection_id_limit == param2->active_connection_id_limit);
+  assert_cp__picoquic_connection_id_t(&param1->initial_source_connection_id, &param2->initial_source_connection_id, 0);
+  assert_cp__picoquic_connection_id_t(&param1->retry_source_connection_id, &param2->retry_source_connection_id, 0);
   sassert(cond);
 }
 
-inline void assert_cp__picoquic_cnx_t(picoquic_cnx_t *param1, picoquic_cnx_t *param2)
+inline void assert_cp__picoquic_cnx_t(picoquic_cnx_t *param1, picoquic_cnx_t *param2, uint64_t flags)
 {
+  sassert(param1 != param2);
   unsigned int cond = 1;
-  cond &= param1->proposed_version == param2->proposed_version;
-  cond &= param1->version_index == param2->version_index;
-  cond &= param1->is_0RTT_accepted == param2->is_0RTT_accepted;
-  cond &= param1->remote_parameters_received == param2->remote_parameters_received;
-  cond &= param1->current_spin == param2->current_spin;
-  cond &= param1->client_mode == param2->client_mode;
-  cond &= param1->prev_spin == param2->prev_spin;
-  cond &= param1->spin_vec == param2->spin_vec;
-  cond &= param1->spin_edge == param2->spin_edge;
-  cond &= param1->spin_last_trigger == param2->spin_last_trigger;
-  cond &= param1->key_phase_enc == param2->key_phase_enc;
-  cond &= param1->key_phase_dec == param2->key_phase_dec;
-  cond &= param1->zero_rtt_data_accepted == param2->zero_rtt_data_accepted;
-  cond &= param1->one_rtt_data_acknowledged == param2->one_rtt_data_acknowledged;
-  cond &= param1->processed_transport_parameter == param2->processed_transport_parameter;
-  assert_cp__picoquic_tp_t(&param1->local_parameters, &param2->local_parameters);
-  assert_cp__picoquic_tp_t(&param1->remote_parameters, &param2->remote_parameters);
-  cond &= param1->max_early_data_size == param2->max_early_data_size;
-  assert_cp__picoquic_connection_id_t(&param1->initial_cnxid, &param2->initial_cnxid);
-  cond &= param1->start_time == param2->start_time;
-  cond &= param1->application_error == param2->application_error;
-  cond &= param1->local_error == param2->local_error;
-  cond &= param1->remote_application_error == param2->remote_application_error;
-  cond &= param1->remote_error == param2->remote_error;
-  cond &= param1->offending_frame_type == param2->offending_frame_type;
-  cond &= param1->retry_token_length == param2->retry_token_length;
-  cond &= param1->handshake_done == param2->handshake_done;
-  cond &= param1->handshake_done_sent == param2->handshake_done_sent;
-  cond &= param1->handshake_done_acked == param2->handshake_done_acked;
-  cond &= param1->next_wake_time == param2->next_wake_time;
-  cond &= param1->psk_cipher_suite_id == param2->psk_cipher_suite_id;
-  cond &= param1->latest_progress_time == param2->latest_progress_time;
-  cond &= param1->nb_bytes_queued == param2->nb_bytes_queued;
-  cond &= param1->nb_path_challenge_sent == param2->nb_path_challenge_sent;
-  cond &= param1->nb_path_response_received == param2->nb_path_response_received;
-  cond &= param1->nb_zero_rtt_sent == param2->nb_zero_rtt_sent;
-  cond &= param1->nb_zero_rtt_acked == param2->nb_zero_rtt_acked;
-  cond &= param1->nb_retransmission_total == param2->nb_retransmission_total;
-  cond &= param1->nb_spurious == param2->nb_spurious;
-  cond &= param1->data_sent == param2->data_sent;
-  cond &= param1->data_received == param2->data_received;
-  cond &= param1->maxdata_local == param2->maxdata_local;
-  cond &= param1->maxdata_remote == param2->maxdata_remote;
-  cond &= param1->max_stream_id_bidir_local == param2->max_stream_id_bidir_local;
-  cond &= param1->max_stream_id_bidir_local_computed == param2->max_stream_id_bidir_local_computed;
-  cond &= param1->max_stream_id_unidir_local == param2->max_stream_id_unidir_local;
-  cond &= param1->max_stream_id_unidir_local_computed == param2->max_stream_id_unidir_local_computed;
-  cond &= param1->max_stream_id_bidir_remote == param2->max_stream_id_bidir_remote;
-  cond &= param1->max_stream_id_unidir_remote == param2->max_stream_id_unidir_remote;
-  cond &= param1->last_visited_stream_id == param2->last_visited_stream_id;
-  cond &= param1->last_visited_plugin_stream_id == param2->last_visited_plugin_stream_id;
-  cond &= param1->keep_alive_interval == param2->keep_alive_interval;
-  cond &= param1->nb_paths == param2->nb_paths;
-  cond &= param1->nb_path_alloc == param2->nb_path_alloc;
-  cond &= param1->core_rate == param2->core_rate;
-  cond &= param1->wake_now == param2->wake_now;
-  cond &= param1->plugin_requested == param2->plugin_requested;
-  cond &= param1->protoop_inputc == param2->protoop_inputc;
-  cond &= param1->protoop_outputc_callee == param2->protoop_outputc_callee;
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__PROPOSED_VERSION) || (param1->proposed_version == param2->proposed_version);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__VERSION_INDEX) || (param1->version_index == param2->version_index);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__IS_0RTT_ACCEPTED) || (param1->is_0RTT_accepted == param2->is_0RTT_accepted);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__REMOTE_PARAMETERS_RECEIVED) || (param1->remote_parameters_received == param2->remote_parameters_received);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__CURRENT_SPIN) || (param1->current_spin == param2->current_spin);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__CLIENT_MODE) || (param1->client_mode == param2->client_mode);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__PREV_SPIN) || (param1->prev_spin == param2->prev_spin);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__SPIN_VEC) || (param1->spin_vec == param2->spin_vec);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__SPIN_EDGE) || (param1->spin_edge == param2->spin_edge);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__SPIN_LAST_TRIGGER) || (param1->spin_last_trigger == param2->spin_last_trigger);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__KEY_PHASE_ENC) || (param1->key_phase_enc == param2->key_phase_enc);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__KEY_PHASE_DEC) || (param1->key_phase_dec == param2->key_phase_dec);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__ZERO_RTT_DATA_ACCEPTED) || (param1->zero_rtt_data_accepted == param2->zero_rtt_data_accepted);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__ONE_RTT_DATA_ACKNOWLEDGED) || (param1->one_rtt_data_acknowledged == param2->one_rtt_data_acknowledged);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__PROCESSED_TRANSPORT_PARAMETER) || (param1->processed_transport_parameter == param2->processed_transport_parameter);
+  assert_cp__picoquic_tp_t(&param1->local_parameters, &param2->local_parameters, 0);
+  assert_cp__picoquic_tp_t(&param1->remote_parameters, &param2->remote_parameters, 0);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__MAX_EARLY_DATA_SIZE) || (param1->max_early_data_size == param2->max_early_data_size);
+  assert_cp__picoquic_connection_id_t(&param1->initial_cnxid, &param2->initial_cnxid, 0);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__START_TIME) || (param1->start_time == param2->start_time);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__APPLICATION_ERROR) || (param1->application_error == param2->application_error);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__LOCAL_ERROR) || (param1->local_error == param2->local_error);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__REMOTE_APPLICATION_ERROR) || (param1->remote_application_error == param2->remote_application_error);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__REMOTE_ERROR) || (param1->remote_error == param2->remote_error);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__OFFENDING_FRAME_TYPE) || (param1->offending_frame_type == param2->offending_frame_type);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__RETRY_TOKEN_LENGTH) || (param1->retry_token_length == param2->retry_token_length);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__HANDSHAKE_DONE) || (param1->handshake_done == param2->handshake_done);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__HANDSHAKE_DONE_SENT) || (param1->handshake_done_sent == param2->handshake_done_sent);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__HANDSHAKE_DONE_ACKED) || (param1->handshake_done_acked == param2->handshake_done_acked);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__NEXT_WAKE_TIME) || (param1->next_wake_time == param2->next_wake_time);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__PSK_CIPHER_SUITE_ID) || (param1->psk_cipher_suite_id == param2->psk_cipher_suite_id);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__LATEST_PROGRESS_TIME) || (param1->latest_progress_time == param2->latest_progress_time);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__NB_BYTES_QUEUED) || (param1->nb_bytes_queued == param2->nb_bytes_queued);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__NB_PATH_CHALLENGE_SENT) || (param1->nb_path_challenge_sent == param2->nb_path_challenge_sent);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__NB_PATH_RESPONSE_RECEIVED) || (param1->nb_path_response_received == param2->nb_path_response_received);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__NB_ZERO_RTT_SENT) || (param1->nb_zero_rtt_sent == param2->nb_zero_rtt_sent);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__NB_ZERO_RTT_ACKED) || (param1->nb_zero_rtt_acked == param2->nb_zero_rtt_acked);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__NB_RETRANSMISSION_TOTAL) || (param1->nb_retransmission_total == param2->nb_retransmission_total);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__NB_SPURIOUS) || (param1->nb_spurious == param2->nb_spurious);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__DATA_SENT) || (param1->data_sent == param2->data_sent);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__DATA_RECEIVED) || (param1->data_received == param2->data_received);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__MAXDATA_LOCAL) || (param1->maxdata_local == param2->maxdata_local);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__MAXDATA_REMOTE) || (param1->maxdata_remote == param2->maxdata_remote);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__MAX_STREAM_ID_BIDIR_LOCAL) || (param1->max_stream_id_bidir_local == param2->max_stream_id_bidir_local);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__MAX_STREAM_ID_BIDIR_LOCAL_COMPUTED) || (param1->max_stream_id_bidir_local_computed == param2->max_stream_id_bidir_local_computed);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__MAX_STREAM_ID_UNIDIR_LOCAL) || (param1->max_stream_id_unidir_local == param2->max_stream_id_unidir_local);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__MAX_STREAM_ID_UNIDIR_LOCAL_COMPUTED) || (param1->max_stream_id_unidir_local_computed == param2->max_stream_id_unidir_local_computed);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__MAX_STREAM_ID_BIDIR_REMOTE) || (param1->max_stream_id_bidir_remote == param2->max_stream_id_bidir_remote);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__MAX_STREAM_ID_UNIDIR_REMOTE) || (param1->max_stream_id_unidir_remote == param2->max_stream_id_unidir_remote);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__LAST_VISITED_STREAM_ID) || (param1->last_visited_stream_id == param2->last_visited_stream_id);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__LAST_VISITED_PLUGIN_STREAM_ID) || (param1->last_visited_plugin_stream_id == param2->last_visited_plugin_stream_id);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__KEEP_ALIVE_INTERVAL) || (param1->keep_alive_interval == param2->keep_alive_interval);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__NB_PATHS) || (param1->nb_paths == param2->nb_paths);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__NB_PATH_ALLOC) || (param1->nb_path_alloc == param2->nb_path_alloc);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__CORE_RATE) || (param1->core_rate == param2->core_rate);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__WAKE_NOW) || (param1->wake_now == param2->wake_now);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__PLUGIN_REQUESTED) || (param1->plugin_requested == param2->plugin_requested);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__PROTOOP_INPUTC) || (param1->protoop_inputc == param2->protoop_inputc);
+  cond &= (flags & ASSERT_PICOQUIC_CNX_T__PROTOOP_OUTPUTC_CALLEE) || (param1->protoop_outputc_callee == param2->protoop_outputc_callee);
   sassert(cond);
 }
 
-inline void assert_cp__picoquic_sack_item_t(picoquic_sack_item_t *param1, picoquic_sack_item_t *param2)
+inline void assert_cp__picoquic_sack_item_t(picoquic_sack_item_t *param1, picoquic_sack_item_t *param2, uint64_t flags)
 {
+  sassert(param1 != param2);
   unsigned int cond = 1;
-  cond &= param1->start_of_sack_range == param2->start_of_sack_range;
-  cond &= param1->end_of_sack_range == param2->end_of_sack_range;
+  cond &= (flags & ASSERT_PICOQUIC_SACK_ITEM_T__START_OF_SACK_RANGE) || (param1->start_of_sack_range == param2->start_of_sack_range);
+  cond &= (flags & ASSERT_PICOQUIC_SACK_ITEM_T__END_OF_SACK_RANGE) || (param1->end_of_sack_range == param2->end_of_sack_range);
   sassert(cond);
 }
 
-inline void assert_cp__picoquic_packet_context_t(picoquic_packet_context_t *param1, picoquic_packet_context_t *param2)
+inline void assert_cp__picoquic_packet_context_t(picoquic_packet_context_t *param1, picoquic_packet_context_t *param2, uint64_t flags)
 {
+  sassert(param1 != param2);
   unsigned int cond = 1;
-  cond &= param1->send_sequence == param2->send_sequence;
-  assert_cp__picoquic_sack_item_t(&param1->first_sack_item, &param2->first_sack_item);
-  cond &= param1->time_stamp_largest_received == param2->time_stamp_largest_received;
-  cond &= param1->highest_ack_sent == param2->highest_ack_sent;
-  cond &= param1->highest_ack_time == param2->highest_ack_time;
-  //cond &= param1->ack_delay_local == param2->ack_delay_local;
-  cond &= param1->latest_progress_time == param2->latest_progress_time;
-  cond &= param1->nb_retransmit == param2->nb_retransmit;
-  cond &= param1->latest_retransmit_time == param2->latest_retransmit_time;
-  cond &= param1->latest_retransmit_cc_notification_time == param2->latest_retransmit_cc_notification_time;
-  cond &= param1->highest_acknowledged == param2->highest_acknowledged;
-  cond &= param1->latest_time_acknowledged == param2->latest_time_acknowledged;
-  cond &= param1->ack_needed == param2->ack_needed;
+  cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__SEND_SEQUENCE) || (param1->send_sequence == param2->send_sequence);
+  assert_cp__picoquic_sack_item_t(&param1->first_sack_item, &param2->first_sack_item, 0);
+  cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__TIME_STAMP_LARGEST_RECEIVED) || (param1->time_stamp_largest_received == param2->time_stamp_largest_received);
+  cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__HIGHEST_ACK_SENT) || (param1->highest_ack_sent == param2->highest_ack_sent);
+  cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__HIGHEST_ACK_TIME) || (param1->highest_ack_time == param2->highest_ack_time);
+  cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__ACK_DELAY_LOCAL) || (param1->ack_delay_local == param2->ack_delay_local);
+  cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__LATEST_PROGRESS_TIME) || (param1->latest_progress_time == param2->latest_progress_time);
+  cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__NB_RETRANSMIT) || (param1->nb_retransmit == param2->nb_retransmit);
+  cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__LATEST_RETRANSMIT_TIME) || (param1->latest_retransmit_time == param2->latest_retransmit_time);
+  cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__LATEST_RETRANSMIT_CC_NOTIFICATION_TIME) || (param1->latest_retransmit_cc_notification_time == param2->latest_retransmit_cc_notification_time);
+  cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__HIGHEST_ACKNOWLEDGED) || (param1->highest_acknowledged == param2->highest_acknowledged);
+  cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__LATEST_TIME_ACKNOWLEDGED) || (param1->latest_time_acknowledged == param2->latest_time_acknowledged);
+  cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__ACK_NEEDED) || (param1->ack_needed == param2->ack_needed);
   sassert(cond);
 }
 
-inline void assert_cp__picoquic_path_t(picoquic_path_t *param1, picoquic_path_t *param2)
+inline void assert_cp__picoquic_path_t(picoquic_path_t *param1, picoquic_path_t *param2, uint64_t flags)
 {
+  sassert(param1 != param2);
   unsigned int cond = 1;
-  cond &= param1->peer_addr_len == param2->peer_addr_len;
-  cond &= param1->local_addr_len == param2->local_addr_len;
-  cond &= param1->if_index_local == param2->if_index_local;
-  cond &= param1->challenge == param2->challenge;
-  cond &= param1->challenge_time == param2->challenge_time;
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__PEER_ADDR_LEN) || (param1->peer_addr_len == param2->peer_addr_len);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__LOCAL_ADDR_LEN) || (param1->local_addr_len == param2->local_addr_len);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__IF_INDEX_LOCAL) || (param1->if_index_local == param2->if_index_local);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__CHALLENGE) || (param1->challenge == param2->challenge);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__CHALLENGE_TIME) || (param1->challenge_time == param2->challenge_time);
   cond &= param1->challenge_response[0] == param2->challenge_response[0];
   cond &= param1->challenge_response[1] == param2->challenge_response[1];
   cond &= param1->challenge_response[2] == param2->challenge_response[2];
@@ -696,45 +703,45 @@ inline void assert_cp__picoquic_path_t(picoquic_path_t *param1, picoquic_path_t 
   cond &= param1->challenge_response[5] == param2->challenge_response[5];
   cond &= param1->challenge_response[6] == param2->challenge_response[6];
   cond &= param1->challenge_response[7] == param2->challenge_response[7];
-  cond &= param1->challenge_repeat_count == param2->challenge_repeat_count;
-  cond &= param1->mtu_probe_sent == param2->mtu_probe_sent;
-  cond &= param1->challenge_verified == param2->challenge_verified;
-  cond &= param1->challenge_response_to_send == param2->challenge_response_to_send;
-  cond &= param1->ping_received == param2->ping_received;
-  cond &= param1->last_bw_estimate_path_limited == param2->last_bw_estimate_path_limited;
-  cond &= param1->max_ack_delay == param2->max_ack_delay;
-  cond &= param1->rtt_sample == param2->rtt_sample;
-  cond &= param1->smoothed_rtt == param2->smoothed_rtt;
-  cond &= param1->rtt_variant == param2->rtt_variant;
-  cond &= param1->retransmit_timer == param2->retransmit_timer;
-  cond &= param1->rtt_min == param2->rtt_min;
-  cond &= param1->max_spurious_rtt == param2->max_spurious_rtt;
-  cond &= param1->max_reorder_delay == param2->max_reorder_delay;
-  cond &= param1->max_reorder_gap == param2->max_reorder_gap;
-  cond &= param1->send_mtu == param2->send_mtu;
-  cond &= param1->send_mtu_max_tried == param2->send_mtu_max_tried;
-  cond &= param1->cwin == param2->cwin;
-  cond &= param1->bytes_in_transit == param2->bytes_in_transit;
-  cond &= param1->pacing_evaluation_time == param2->pacing_evaluation_time;
-  cond &= param1->pacing_bucket_nanosec == param2->pacing_bucket_nanosec;
-  cond &= param1->pacing_bucket_max == param2->pacing_bucket_max;
-  cond &= param1->pacing_packet_time_nanosec == param2->pacing_packet_time_nanosec;
-  cond &= param1->pacing_packet_time_microsec == param2->pacing_packet_time_microsec;
-  cond &= param1->nb_pkt_sent == param2->nb_pkt_sent;
-  cond &= param1->delivered == param2->delivered;
-  cond &= param1->delivered_last == param2->delivered_last;
-  cond &= param1->delivered_time_last == param2->delivered_time_last;
-  cond &= param1->delivered_sent_last == param2->delivered_sent_last;
-  cond &= param1->delivered_limited_index == param2->delivered_limited_index;
-  cond &= param1->delivered_last_packet == param2->delivered_last_packet;
-  cond &= param1->bandwidth_estimate == param2->bandwidth_estimate;
-  cond &= param1->received == param2->received;
-  cond &= param1->receive_rate_epoch == param2->receive_rate_epoch;
-  cond &= param1->received_prior == param2->received_prior;
-  cond &= param1->receive_rate_estimate == param2->receive_rate_estimate;
-  cond &= param1->receive_rate_max == param2->receive_rate_max;
-  assert_cp__picoquic_connection_id_t(&param1->local_cnxid, &param2->local_cnxid);
-  assert_cp__picoquic_connection_id_t(&param1->remote_cnxid, &param2->remote_cnxid);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__CHALLENGE_REPEAT_COUNT) || (param1->challenge_repeat_count == param2->challenge_repeat_count);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__MTU_PROBE_SENT) || (param1->mtu_probe_sent == param2->mtu_probe_sent);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__CHALLENGE_VERIFIED) || (param1->challenge_verified == param2->challenge_verified);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__CHALLENGE_RESPONSE_TO_SEND) || (param1->challenge_response_to_send == param2->challenge_response_to_send);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__PING_RECEIVED) || (param1->ping_received == param2->ping_received);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__LAST_BW_ESTIMATE_PATH_LIMITED) || (param1->last_bw_estimate_path_limited == param2->last_bw_estimate_path_limited);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__MAX_ACK_DELAY) || (param1->max_ack_delay == param2->max_ack_delay);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__RTT_SAMPLE) || (param1->rtt_sample == param2->rtt_sample);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__SMOOTHED_RTT) || (param1->smoothed_rtt == param2->smoothed_rtt);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__RTT_VARIANT) || (param1->rtt_variant == param2->rtt_variant);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__RETRANSMIT_TIMER) || (param1->retransmit_timer == param2->retransmit_timer);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__RTT_MIN) || (param1->rtt_min == param2->rtt_min);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__MAX_SPURIOUS_RTT) || (param1->max_spurious_rtt == param2->max_spurious_rtt);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__MAX_REORDER_DELAY) || (param1->max_reorder_delay == param2->max_reorder_delay);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__MAX_REORDER_GAP) || (param1->max_reorder_gap == param2->max_reorder_gap);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__SEND_MTU) || (param1->send_mtu == param2->send_mtu);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__SEND_MTU_MAX_TRIED) || (param1->send_mtu_max_tried == param2->send_mtu_max_tried);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__CWIN) || (param1->cwin == param2->cwin);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__BYTES_IN_TRANSIT) || (param1->bytes_in_transit == param2->bytes_in_transit);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__PACING_EVALUATION_TIME) || (param1->pacing_evaluation_time == param2->pacing_evaluation_time);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__PACING_BUCKET_NANOSEC) || (param1->pacing_bucket_nanosec == param2->pacing_bucket_nanosec);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__PACING_BUCKET_MAX) || (param1->pacing_bucket_max == param2->pacing_bucket_max);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__PACING_PACKET_TIME_NANOSEC) || (param1->pacing_packet_time_nanosec == param2->pacing_packet_time_nanosec);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__PACING_PACKET_TIME_MICROSEC) || (param1->pacing_packet_time_microsec == param2->pacing_packet_time_microsec);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__NB_PKT_SENT) || (param1->nb_pkt_sent == param2->nb_pkt_sent);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__DELIVERED) || (param1->delivered == param2->delivered);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__DELIVERED_LAST) || (param1->delivered_last == param2->delivered_last);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__DELIVERED_TIME_LAST) || (param1->delivered_time_last == param2->delivered_time_last);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__DELIVERED_SENT_LAST) || (param1->delivered_sent_last == param2->delivered_sent_last);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__DELIVERED_LIMITED_INDEX) || (param1->delivered_limited_index == param2->delivered_limited_index);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__DELIVERED_LAST_PACKET) || (param1->delivered_last_packet == param2->delivered_last_packet);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__BANDWIDTH_ESTIMATE) || (param1->bandwidth_estimate == param2->bandwidth_estimate);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__RECEIVED) || (param1->received == param2->received);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__RECEIVE_RATE_EPOCH) || (param1->receive_rate_epoch == param2->receive_rate_epoch);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__RECEIVED_PRIOR) || (param1->received_prior == param2->received_prior);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__RECEIVE_RATE_ESTIMATE) || (param1->receive_rate_estimate == param2->receive_rate_estimate);
+  cond &= (flags & ASSERT_PICOQUIC_PATH_T__RECEIVE_RATE_MAX) || (param1->receive_rate_max == param2->receive_rate_max);
+  assert_cp__picoquic_connection_id_t(&param1->local_cnxid, &param2->local_cnxid, 0);
+  assert_cp__picoquic_connection_id_t(&param1->remote_cnxid, &param2->remote_cnxid, 0);
   cond &= param1->reset_secret[0] == param2->reset_secret[0];
   cond &= param1->reset_secret[1] == param2->reset_secret[1];
   cond &= param1->reset_secret[2] == param2->reset_secret[2];
