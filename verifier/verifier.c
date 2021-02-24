@@ -2,6 +2,12 @@
 
 /* WARNING : this file is automagically generated. */
 
+extern picoquic_packet_context_enum nd();
+
+inline void init__picoquic_packet_context_enum(picoquic_packet_context_enum* pc) {
+  *pc = nd();
+}
+
 inline void init__picoquic_connection_id_t(picoquic_connection_id_t *param1)
 {
   param1->id[0] = dummy__uint8_t();

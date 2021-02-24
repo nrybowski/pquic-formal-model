@@ -147,6 +147,7 @@ extern uint32_t dummy__uint32_t();
 extern int dummy__int();
 extern size_t dummy__size_t();
 extern unsigned long dummy__unsigned_long();
+inline void init__picoquic_packet_context_enum(picoquic_packet_context_enum* pc);
 inline void init__picoquic_connection_id_t(picoquic_connection_id_t *param1);
 inline void init__picoquic_tp_preferred_address_t(picoquic_tp_preferred_address_t *param1);
 inline void init__picoquic_tp_t(picoquic_tp_t *param1);
