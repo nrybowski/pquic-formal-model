@@ -62,10 +62,11 @@ header file => AST => intermediate AST => annotation's AST => C code + header fi
 
 ```console
 cd "${PQUIC}"/
-docker run -it $(pwd):/host
+docker run -it $(pwd):/host seahorn/seahorn-llvm10:nightly
 # inside container
 cd /host
-sea bpf --bmc=mono --inline --crab --track=mem --dsa=sea-cs -g -m64 -Ipicoquic -DDISABLE_PROTOOP_PRINTF -DDISABLE_QLOG picoquic/getset.c picoquic/verifier/verifier.c picoquic/verifier/verifier.c <plugin.c> [--cex=cex.ll]
+sea bpf -g --bmc=opsem --inline --crab --track=mem --dsa=sea-cs -m64 -DDISABLE_PROTOOP_PRINTF -DDISABLE_QLOG -Ipquic/picoquic pquic/picoquic/getset.c pquic-formal-model/verifier/verifier.c pquic/plugins/ack_delay/update_ack_delay.c pquic-formal-model/checks/specs_check__update_ack_delay.c 
+
 sea exe -g -m64 -Ipicoquic -DDISABLE_PROTOOP_PRINTF picoquic/getset.c picoquic/verifier/verifier.c picoquic/verifier/verifier.c <plugin.c> cex.ll -o cex
 gdb ./cex
 # set disable-randomization off

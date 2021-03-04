@@ -4,7 +4,7 @@ This directory contains a list of malicious pluglets presenting unexpected behav
 The helpers provided to handle the host's heap are way to much permissive and allow full (read and write) access to the host memory.
 It is also shown that the pre hook allows writes which is also unexpected since pluglets loaded at this hook are expected to be observers.
 
-There are 4 illustrative pluglets. They all use the same method :
+There are 5 illustrative pluglets. They all use the same method :
 1. first, a ptr is created on the host's heap by using `my_malloc`
 2. then, the address of the structure of interest is copied into this pointer
 3. a direct field is immediately reachable from this pointer
@@ -29,6 +29,9 @@ This shows that the write is indeed applied in a definitive way since the contex
 ### `plugin_rw_replace`
 While the three previous plugins performed read/write accesses to a field of the cnx, this plugins shows that any structure pointed in the cnx is also readable / writable.
 This plugins access the its own name and the path to its manifest from the `prootop_plugin_t *current_plugin` entry of the cnx passed as argument.
+
+### `cnx_rw_tested_replace`
+This plugin rewrites the first input provided through the cnx since this field is tested through SeaHorn.
 
 ## Test
 
@@ -72,3 +75,15 @@ Entering pluglet	SNI : lbcalhost	Exiting pluglet
 ```console
 Entering pluglet	Plugin name:<be.nrybowski.plugin_rw_replace>	Path:</mnt/dummy_test/plugin_rw_replace.plugin>	Before return
 ```
+### `cnx_rw_tested_replace`
+```console
+Entering pluglet	Before 924385483	After 0	Exiting pluglet
+```
+
+SH is able to detect writes on the context with `my_memset` but entirely lost when memory allocation is done via `my_malloc` (using opsem).
+
+With the `my_memset` commented out
+```console
+sea bpf -g --bmc=opsem --inline --crab --track=mem --dsa=sea-cs -m64 -DDISABLE_PROTOOP_PRINTF -DDISABLE_QLOG -Ipquic/picoquic pquic/picoquic/getset.c pquic/picoquic/memcpy.c pquic/picoquic/memory.c pquic-formal-model/verifier/verifier.c pquic/plugins/dummy_test/cnx_rw_tested_replace.c pquic-formal-model/checks/specs_check__update_ack_delay.c 
+```
+gives `unsat` while the same check but with the memory write gives `sat` which is the result expected.
