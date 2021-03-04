@@ -1,0 +1,4 @@
+be.nrybowski.cnx_rw_pre
+
+is_ack_needed pre cnx_rw_pre.o
+is_ack_needed replace cnx_ro_replace.o
