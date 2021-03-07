@@ -19,11 +19,11 @@ def generate_main():
     # Add : init__picoquic_cnx_t(&cnx);
     body.append(c_ast.FuncCall(c_ast.ID('init__picoquic_cnx_t'), c_ast.ExprList([c_ast.ID('&cnx')])))
 
+    # Add : assume(cnx.protoop_inputc == <nb inputc>);
+    body.append(c_ast.Assignment('=', c_ast.StructRef(c_ast.ID('cnx'), '.', c_ast.ID('protoop_inputc')), c_ast.Constant('int', str(len(protoop_specs['inputs']))), c_ast.ExprList([])))
+
     # Add : assume_cp__picoquic_cnx_t(&cnx, &cnx0);
     body.append(c_ast.FuncCall(c_ast.ID('assume_cp__picoquic_cnx_t'), c_ast.ExprList([c_ast.ID('&cnx'), c_ast.ID('&cnx0')])))
-
-    # Add : assume(cnx.protoop_inputc == 3);
-    body.append(c_ast.FuncCall(c_ast.ID('assume'), c_ast.ExprList([c_ast.BinaryOp('==', c_ast.StructRef(c_ast.ID('cnx'), '.', c_ast.ID('protoop_inputc')), c_ast.Constant('int', str(len(protoop_specs['inputs']))))])))
 
     idx = 0
     for input_name, input_type in protoop_specs['inputs'].items():
