@@ -76,6 +76,8 @@ inline void init__picoquic_tp_preferred_address_t(picoquic_tp_preferred_address_
   param1->stateless_reset_token[15] = dummy__uint8_t();
 }
 
+extern char dummy_char();
+
 inline void init__picoquic_tp_t(picoquic_tp_t *param1)
 {
   init__picoquic_connection_id_t(&param1->original_destination_connection_id);
@@ -94,6 +96,14 @@ inline void init__picoquic_tp_t(picoquic_tp_t *param1)
   param1->active_connection_id_limit = dummy__uint64_t();
   init__picoquic_connection_id_t(&param1->initial_source_connection_id);
   init__picoquic_connection_id_t(&param1->retry_source_connection_id);
+#ifdef BUFFER_CHECK
+  param1->supported_plugins_length = dummy__size_t();
+  param1->supported_plugins = (char*) malloc(sizeof(char)*param1->supported_plugins_length);
+  assume(param1->supported_plugins != NULL);
+  for (int i=0; i<param1->supported_plugins_length; i++)
+    *(param1->supported_plugins+i) = dummy_char();
+#endif
+  //param1->plugins_to_inject_length = dummy_size_t();
 }
 
 inline void init__picoquic_cnx_t(picoquic_cnx_t *param1)
@@ -340,6 +350,14 @@ inline void assume_cp__picoquic_tp_t(picoquic_tp_t *src, picoquic_tp_t *dst)
   dst->active_connection_id_limit = src->active_connection_id_limit;
   assume_cp__picoquic_connection_id_t(&src->initial_source_connection_id, &dst->initial_source_connection_id);
   assume_cp__picoquic_connection_id_t(&src->retry_source_connection_id, &dst->retry_source_connection_id);
+#ifdef BUFFER_CHECK
+  dst->supported_plugins_length = src->supported_plugins_length;
+  dst->supported_plugins = (char*) malloc(sizeof(char)*dst->supported_plugins_length);
+  assume(dst->supported_plugins != NULL);
+  for (int i=0; i<dst->supported_plugins_length; i++)
+    *(dst->supported_plugins+i) = *(src->supported_plugins+i);
+#endif
+
 }
 
 inline void assume_cp__picoquic_cnx_t(picoquic_cnx_t *src, picoquic_cnx_t *dst)
@@ -594,6 +612,13 @@ inline void assert_cp__picoquic_tp_t(picoquic_tp_t *param1, picoquic_tp_t *param
   cond &= (flags & ASSERT_PICOQUIC_TP_T__ACTIVE_CONNECTION_ID_LIMIT) || (param1->active_connection_id_limit == param2->active_connection_id_limit);
   assert_cp__picoquic_connection_id_t(&param1->initial_source_connection_id, &param2->initial_source_connection_id, 0);
   assert_cp__picoquic_connection_id_t(&param1->retry_source_connection_id, &param2->retry_source_connection_id, 0);
+#ifdef BUFFER_CHECK
+  cond &= param1->supported_plugins_length == param2->supported_plugins_length;
+  for (int i=0; i<param1->supported_plugins_length; i++)
+    cond &= *(param1->supported_plugins+i) == *(param2->supported_plugins+i);
+  free(param1->supported_plugins);
+  free(param2->supported_plugins);
+#endif
   sassert(cond);
 }
 
