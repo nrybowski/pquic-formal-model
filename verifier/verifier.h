@@ -131,6 +131,22 @@
 #define ASSERT_PICOQUIC_PATH_T__RECEIVED_PRIOR 0x8000000000
 #define ASSERT_PICOQUIC_PATH_T__RECEIVE_RATE_ESTIMATE 0x10000000000
 #define ASSERT_PICOQUIC_PATH_T__RECEIVE_RATE_MAX 0x20000000000
+#define ASSERT_PICOQUIC_PACKET_T__SEQUENCE_NUMBER 0x1
+#define ASSERT_PICOQUIC_PACKET_T__SEND_TIME 0x2
+#define ASSERT_PICOQUIC_PACKET_T__DELIVERED_PRIOR 0x4
+#define ASSERT_PICOQUIC_PACKET_T__DELIVERED_TIME_PRIOR 0x8
+#define ASSERT_PICOQUIC_PACKET_T__DELIVERED_SENT_PRIOR 0x10
+#define ASSERT_PICOQUIC_PACKET_T__LENGTH 0x20
+#define ASSERT_PICOQUIC_PACKET_T__SEND_LENGTH 0x40
+#define ASSERT_PICOQUIC_PACKET_T__CHECKSUM_OVERHEAD 0x80
+#define ASSERT_PICOQUIC_PACKET_T__OFFSET 0x100
+#define ASSERT_PICOQUIC_PACKET_T__IS_PURE_ACK 0x200
+#define ASSERT_PICOQUIC_PACKET_T__CONTAINS_CRYPTO 0x400
+#define ASSERT_PICOQUIC_PACKET_T__IS_CONGESTION_CONTROLLED 0x800
+#define ASSERT_PICOQUIC_PACKET_T__HAS_PLUGIN_FRAMES 0x1000
+#define ASSERT_PICOQUIC_PACKET_T__IS_MTU_PROBE 0x2000
+#define ASSERT_PICOQUIC_PACKET_T__DELIVERED_APP_LIMITED 0x4000
+#define ASSERT_PICOQUIC_PACKET_T__HAS_HANDSHAKE_DONE 0x8000
 
 extern void dummy_cp__picoquic_cnx_t(picoquic_cnx_t *src, picoquic_cnx_t *dst);
 extern void dummy_cp__picoquic_tp_t(picoquic_tp_t *src, picoquic_tp_t *dst);
@@ -139,6 +155,7 @@ extern void dummy_cp__picoquic_tp_preferred_address_t(picoquic_tp_preferred_addr
 extern void dummy_cp__picoquic_packet_context_t(picoquic_packet_context_t *src, picoquic_packet_context_t *dst);
 extern void dummy_cp__picoquic_sack_item_t(picoquic_sack_item_t *src, picoquic_sack_item_t *dst);
 extern void dummy_cp__picoquic_path_t(picoquic_path_t *src, picoquic_path_t *dst);
+extern void dummy_cp__picoquic_packet_t(picoquic_packet_t *src, picoquic_packet_t *dst);
 extern uint8_t dummy__uint8_t();
 extern uint16_t dummy__uint16_t();
 extern uint64_t dummy__uint64_t();
@@ -147,7 +164,6 @@ extern uint32_t dummy__uint32_t();
 extern int dummy__int();
 extern size_t dummy__size_t();
 extern unsigned long dummy__unsigned_long();
-inline void init__picoquic_packet_context_enum(picoquic_packet_context_enum* pc);
 inline void init__picoquic_connection_id_t(picoquic_connection_id_t *param1);
 inline void init__picoquic_tp_preferred_address_t(picoquic_tp_preferred_address_t *param1);
 inline void init__picoquic_tp_t(picoquic_tp_t *param1);
@@ -155,6 +171,7 @@ inline void init__picoquic_cnx_t(picoquic_cnx_t *param1);
 inline void init__picoquic_sack_item_t(picoquic_sack_item_t *param1);
 inline void init__picoquic_packet_context_t(picoquic_packet_context_t *param1);
 inline void init__picoquic_path_t(picoquic_path_t *param1);
+inline void init__picoquic_packet_t(picoquic_packet_t *param1);
 inline void assume_cp__picoquic_connection_id_t(picoquic_connection_id_t *src, picoquic_connection_id_t *dst);
 inline void assume_cp__picoquic_tp_preferred_address_t(picoquic_tp_preferred_address_t *src, picoquic_tp_preferred_address_t *dst);
 inline void assume_cp__picoquic_tp_t(picoquic_tp_t *src, picoquic_tp_t *dst);
@@ -162,6 +179,7 @@ inline void assume_cp__picoquic_cnx_t(picoquic_cnx_t *src, picoquic_cnx_t *dst);
 inline void assume_cp__picoquic_sack_item_t(picoquic_sack_item_t *src, picoquic_sack_item_t *dst);
 inline void assume_cp__picoquic_packet_context_t(picoquic_packet_context_t *src, picoquic_packet_context_t *dst);
 inline void assume_cp__picoquic_path_t(picoquic_path_t *src, picoquic_path_t *dst);
+inline void assume_cp__picoquic_packet_t(picoquic_packet_t *src, picoquic_packet_t *dst);
 inline void assert_cp__picoquic_connection_id_t(picoquic_connection_id_t *param1, picoquic_connection_id_t *param2, uint64_t flags);
 inline void assert_cp__picoquic_tp_preferred_address_t(picoquic_tp_preferred_address_t *param1, picoquic_tp_preferred_address_t *param2, uint64_t flags);
 inline void assert_cp__picoquic_tp_t(picoquic_tp_t *param1, picoquic_tp_t *param2, uint64_t flags);
@@ -169,3 +187,4 @@ inline void assert_cp__picoquic_cnx_t(picoquic_cnx_t *param1, picoquic_cnx_t *pa
 inline void assert_cp__picoquic_sack_item_t(picoquic_sack_item_t *param1, picoquic_sack_item_t *param2, uint64_t flags);
 inline void assert_cp__picoquic_packet_context_t(picoquic_packet_context_t *param1, picoquic_packet_context_t *param2, uint64_t flags);
 inline void assert_cp__picoquic_path_t(picoquic_path_t *param1, picoquic_path_t *param2, uint64_t flags);
+inline void assert_cp__picoquic_packet_t(picoquic_packet_t *param1, picoquic_packet_t *param2, uint64_t flags);
