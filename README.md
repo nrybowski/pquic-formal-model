@@ -61,11 +61,12 @@ header file => AST => intermediate AST => annotation's AST => C code + header fi
 ```
 
 ```console
-cd "${PQUIC}"/
+# init submodules
+ln -s ../../verifer pquic/picoquic
 docker run -it $(pwd):/host seahorn/seahorn-llvm10:nightly
 # inside container
 cd /host
-sea bpf -g --bmc=opsem --inline --crab --track=mem --dsa=sea-cs -m64 -DDISABLE_PROTOOP_PRINTF -DDISABLE_QLOG -Ipquic/picoquic pquic/picoquic/getset.c pquic-formal-model/verifier/verifier.c pquic/plugins/ack_delay/update_ack_delay.c pquic-formal-model/checks/specs_check__update_ack_delay.c 
+sea bpf -g --bmc=opsem --inline --crab --track=mem --dsa=sea-cs -m64 -DDISABLE_PROTOOP_PRINTF -DDISABLE_QLOG -Ipquic/picoquic pquic/picoquic/getset.c verifier/verifier.c pquic/plugins/ack_delay/update_ack_delay.c checks/specs_check__update_ack_delay.c 
 
 sea exe -g -m64 -Ipicoquic -DDISABLE_PROTOOP_PRINTF picoquic/getset.c picoquic/verifier/verifier.c picoquic/verifier/verifier.c <plugin.c> cex.ll -o cex
 gdb ./cex

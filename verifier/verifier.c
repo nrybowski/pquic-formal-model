@@ -1,4 +1,4 @@
-#include "verifier/verifier.h"
+#include "verifier.h"
 
 /* WARNING : this file is automagically generated. */
 
