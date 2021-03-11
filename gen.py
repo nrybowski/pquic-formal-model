@@ -304,7 +304,7 @@ def parse_ast(ast):
 
     return ast_dic
 
-ast = parse_file('../pquic/picoquic/picoquic_internal.h', use_cpp=True, cpp_path='clang', cpp_args=['-E', r'-I../pycparser/utils/fake_libc_include'])
+ast = parse_file('pquic/picoquic/picoquic_internal.h', use_cpp=True, cpp_path='clang', cpp_args=['-E', r'-Ipycparser/utils/fake_libc_include'])
 old_ast = parse_ast(ast)
 print(old_ast['picoquic_packet_context_t'])
 
@@ -362,7 +362,7 @@ def fgen(name, struct):
     sassert_signatures.append(assert_sig)
     sassert_implems.append(assert_fun)
 
-for struct in ['picoquic_cnx_t', 'picoquic_packet_context_t', 'picoquic_path_t']:
+for struct in ['picoquic_cnx_t', 'picoquic_packet_context_t', 'picoquic_path_t', 'picoquic_packet_t']:
     fgen(struct, old_ast[struct])
 
 print('ungenerable %s' % ungenerable)
