@@ -1,3 +1,6 @@
 [submodule "pycparser"]
 	path = pycparser
 	url = https://github.com/eliben/pycparser
+[submodule "pquic"]
+	path = pquic
+	url = https://github.com/p-quic/pquic
