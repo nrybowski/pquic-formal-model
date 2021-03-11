@@ -1,0 +1,14 @@
+{
+	"name": "congestion_algorithm_notify",
+	"inputs": {
+		"path_x": ["picoquic_path_t", "*"],
+		"notification": ["picoquic_congestion_notification_t"],
+		"rtt_measurement": ["uint64_t"],
+		"nb_bytes_acknowledged": ["uint64_t"],
+		"lost_packet_number": ["uint64_t"],
+		"current_time": ["uint64_t"]
+	},
+	"effects": {
+		"path_x": ["cwin"]
+	}
+}
