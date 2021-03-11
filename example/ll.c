@@ -76,14 +76,14 @@ void compare(my_struct *s1, my_struct *s2) {
         my_struct *runner1 = s1, *runner2 = s2;
         unsigned int cond = 1;
 
-        while(runner1 != NULL || runner2 != NULL) {
+        while(runner1 != NULL && runner2 != NULL) {
                 cond &= runner1->value == runner2->value;
                 runner1 = runner1->next;
                 runner2 = runner2->next;
         }
 
         // not same size
-        if (runner2 != NULL && runner1 != NULL)
+        if (runner2 != NULL || runner1 != NULL)
                 cond = 0;
 
 #ifdef CHECK
