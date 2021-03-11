@@ -32,14 +32,6 @@ int main()
   sassert(rtt_estimate == ((int64_t) cnx.protoop_inputv[2]));
   sassert(first_estimate == ((bool) cnx.protoop_inputv[3]));
   assert_cp__picoquic_cnx_t(&cnx, &cnx0, ASSERT_NONE);
-
-  for (unsigned int i=0; i<cnx.nb_paths; i++) {
-    free(cnx.path[i]);
-    free(cnx0.path[i]);
-  }
-  free(cnx.path);
-  free(cnx0.path);
-
   return 0;
 }
 

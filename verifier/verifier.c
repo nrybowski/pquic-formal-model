@@ -150,13 +150,25 @@ inline void init__picoquic_cnx_t(picoquic_cnx_t *param1)
   param1->last_visited_stream_id = dummy__uint64_t();
   param1->last_visited_plugin_stream_id = dummy__uint64_t();
   param1->keep_alive_interval = dummy__uint64_t();
-  param1->nb_paths = dummy__int();
+  param1->nb_paths = dummy__unsigned_int();
   param1->nb_path_alloc = dummy__int();
   param1->core_rate = dummy__uint16_t();
   param1->wake_now = dummy__uint8_t();
   param1->plugin_requested = dummy__uint8_t();
   param1->protoop_inputc = dummy__int();
   param1->protoop_outputc_callee = dummy__int();
+
+  param1->path = (picoquic_path_t **) malloc(param1->nb_paths*sizeof(picoquic_path_t*));
+  //assume(param1->path != NULL);
+  //picoquic_path_t *tmp_path;
+  for (unsigned int i=0; i<param1->nb_paths; i++) {
+    //tmp_path = (picoquic_path_t*) malloc(sizeof(picoquic_path_t));
+    param1->path[i] = (picoquic_path_t*) malloc(sizeof(picoquic_path_t));
+    init__picoquic_path_t(param1->path[i]);
+    //assume(tmp_path != NULL);
+    //init__picoquic_path_t(tmp_path);
+    //param1->path[i] = tmp_path;
+  }
 }
 
 inline void init__picoquic_sack_item_t(picoquic_sack_item_t *param1)
@@ -403,6 +415,19 @@ inline void assume_cp__picoquic_cnx_t(picoquic_cnx_t *src, picoquic_cnx_t *dst)
   dst->plugin_requested = src->plugin_requested;
   dst->protoop_inputc = src->protoop_inputc;
   dst->protoop_outputc_callee = src->protoop_outputc_callee;
+
+  dst->path = (picoquic_path_t **) malloc(dst->nb_paths*sizeof(picoquic_path_t*));
+  //assume(dst->path != NULL);
+  //picoquic_path_t *tmp_path;
+  for (unsigned int i=0; i<dst->nb_paths; i++) {
+    //tmp_path = (picoquic_path_t*) malloc(sizeof(picoquic_path_t));
+    dst->path[i] = (picoquic_path_t*) malloc(sizeof(picoquic_path_t));
+    assume(dst->path[i] != src->path[i]);
+    assume_cp__picoquic_path_t(src->path[i], dst->path[i]);
+    //assume(tmp_path != NULL);
+    //assume_cp__picoquic_path_t(src->path[i], tmp_path);
+    //dst->path[i] = tmp_path;
+  }
 }
 
 inline void assume_cp__picoquic_sack_item_t(picoquic_sack_item_t *src, picoquic_sack_item_t *dst)
@@ -660,6 +685,20 @@ inline void assert_cp__picoquic_cnx_t(picoquic_cnx_t *param1, picoquic_cnx_t *pa
   cond &= (flags & ASSERT_PICOQUIC_CNX_T__PLUGIN_REQUESTED) || (param1->plugin_requested == param2->plugin_requested);
   cond &= (flags & ASSERT_PICOQUIC_CNX_T__PROTOOP_INPUTC) || (param1->protoop_inputc == param2->protoop_inputc);
   cond &= (flags & ASSERT_PICOQUIC_CNX_T__PROTOOP_OUTPUTC_CALLEE) || (param1->protoop_outputc_callee == param2->protoop_outputc_callee);
+
+  /*unsigned int i = dummy__unsigned_int();
+  assume(i < param1->nb_paths);
+  //cond &= (param1->path[i]->challenge == param2->path[i]->challenge);
+  cond &= (param1->path[i] != param2->path[i]);*/
+
+  for (unsigned int i=0; i<param1->nb_paths; i++) {
+      //sassert(param1->path[i] != NULL);
+      //sassert(param2->path[i] != NULL);
+      //sassert(param1->path[i] != param2->path[i]);
+      //cond &= (param1->path[i]->challenge == param2->path[i]->challenge);
+      assert_cp__picoquic_path_t(param1->path[i], param2->path[i], ASSERT_NONE);
+  }
+
   sassert(cond);
 }
 
@@ -694,7 +733,7 @@ inline void assert_cp__picoquic_packet_context_t(picoquic_packet_context_t *para
 
 inline void assert_cp__picoquic_path_t(picoquic_path_t *param1, picoquic_path_t *param2, uint64_t flags)
 {
-  sassert(param1 != param2);
+  //sassert(param1 != param2);
   unsigned int cond = 1;
   cond &= (flags & ASSERT_PICOQUIC_PATH_T__PEER_ADDR_LEN) || (param1->peer_addr_len == param2->peer_addr_len);
   cond &= (flags & ASSERT_PICOQUIC_PATH_T__LOCAL_ADDR_LEN) || (param1->local_addr_len == param2->local_addr_len);
