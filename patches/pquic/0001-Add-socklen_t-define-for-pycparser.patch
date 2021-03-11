@@ -1,0 +1,25 @@
+From f693b5f9221a2b021dd9e989d6abb1609312dfb8 Mon Sep 17 00:00:00 2001
+From: nrybowski <nicolas.rybowski@student.uclouvain.be>
+Date: Thu, 11 Mar 2021 02:23:35 +0100
+Subject: [PATCH] Add socklen_t define for pycparser
+
+---
+ picoquic/picosocks.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/picoquic/picosocks.h b/picoquic/picosocks.h
+index c226e15..ca28fad 100644
+--- a/picoquic/picosocks.h
++++ b/picoquic/picosocks.h
+@@ -120,6 +120,8 @@
+ #define DEFAULT_SOCK_AF AF_INET
+ #endif
+ 
++#define socklen_t int
++
+ typedef struct st_picoquic_server_sockets_t {
+     SOCKET_TYPE s_socket[PICOQUIC_NB_SERVER_SOCKETS];
+ } picoquic_server_sockets_t;
+-- 
+2.30.1
+
