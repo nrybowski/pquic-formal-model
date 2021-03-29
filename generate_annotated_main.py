@@ -107,6 +107,6 @@ if __name__ == '__main__':
     generator = c_generator.CGenerator()
 
     with open('checks/specs_check__%s.c' % protoop_specs['name'], 'w') as output:
-        output.write('#include "verifier/verifier.h"\n\n')
+        output.write('#include "../verifier/verifier.h"\n\n')
         output.write(generator.visit(main_ast))
 

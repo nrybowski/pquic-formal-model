@@ -1,6 +1,4 @@
-#include "verifier/verifier.h"
-
-extern picoquic_packet_context_enum nd();
+#include "../verifier/verifier.h"
 
 protoop_arg_t is_ack_needed(picoquic_cnx_t *cnx);
 int main()
@@ -8,14 +6,14 @@ int main()
   picoquic_cnx_t cnx;
   picoquic_cnx_t cnx0;
   init__picoquic_cnx_t(&cnx);
+  cnx.protoop_inputc = 3;
   assume_cp__picoquic_cnx_t(&cnx, &cnx0);
-  assume(cnx.protoop_inputc == 3);
   uint64_t current_time;
   current_time = dummy__uint64_t();
   cnx.protoop_inputv[0] = current_time;
   picoquic_packet_context_enum pc;
-  pc = nd();
-  cnx.protoop_inputv[1] = (protoop_arg_t) pc;
+  pc = dummy__picoquic_packet_context_enum();
+  cnx.protoop_inputv[1] = pc;
   picoquic_path_t path_x;
   picoquic_path_t path_x0;
   init__picoquic_path_t(&path_x);

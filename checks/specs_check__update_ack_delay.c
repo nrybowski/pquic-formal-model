@@ -1,4 +1,4 @@
-#include "verifier/verifier.h"
+#include "../verifier/verifier.h"
 
 protoop_arg_t update_ack_delay(picoquic_cnx_t *cnx);
 int main()
@@ -6,8 +6,8 @@ int main()
   picoquic_cnx_t cnx;
   picoquic_cnx_t cnx0;
   init__picoquic_cnx_t(&cnx);
+  cnx.protoop_inputc = 4;
   assume_cp__picoquic_cnx_t(&cnx, &cnx0);
-  assume(cnx.protoop_inputc == 4);
   picoquic_packet_context_t pkt_ctx;
   picoquic_packet_context_t pkt_ctx0;
   init__picoquic_packet_context_t(&pkt_ctx);
