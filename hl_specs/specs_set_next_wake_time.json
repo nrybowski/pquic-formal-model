@@ -1,0 +1,9 @@
+{
+	"name": "set_next_wake_time",
+	"inputs": {
+		"current_time": "uint64_t"
+	},
+	"effects": {
+		"cnx": "wake_now"
+	}
+}
