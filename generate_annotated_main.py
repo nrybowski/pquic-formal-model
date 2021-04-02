@@ -50,6 +50,7 @@ def generate_main():
 
     idx = 0
     for input_name, input_type in protoop_specs['inputs'].items():
+        # right_ref = cnx.protoop_inputv[idx]
         right_ref = c_ast.ArrayRef(c_ast.StructRef(c_ast.ID('cnx'), '.', c_ast.ID('protoop_inputv')), c_ast.Constant('int', str(idx)))
         right = c_ast.Cast(c_ast.Typename(None, [], c_ast.TypeDecl(None, [], c_ast.IdentifierType([input_type[0]]))), right_ref)
         if '*' in input_type:
@@ -75,7 +76,8 @@ def generate_main():
 
 
     # Add : assert_cp__picoquic_cnx_t(&cnx, &cnx0, ASSERT_NONE);
-    body.append(c_ast.FuncCall(c_ast.ID('assert_cp__picoquic_cnx_t'), c_ast.ExprList([c_ast.ID('&cnx'), c_ast.ID('&cnx0'), c_ast.ID('ASSERT_NONE')])))
+    flag = 'ASSERT_NONE' if 'cnx' not in protoop_specs['effects'] else ' | '.join([str.upper('assert_%s__%s' % ('picoquic_cnx_t', field)) for field in  protoop_specs['effects']['cnx']])
+    body.append(c_ast.FuncCall(c_ast.ID('assert_cp__picoquic_cnx_t'), c_ast.ExprList([c_ast.ID('&cnx'), c_ast.ID('&cnx0'), c_ast.ID(flag)])))
 
     # Add : return 0;
     body.append(c_ast.Return(c_ast.Constant('int', '0')))
