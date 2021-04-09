@@ -9,6 +9,6 @@
 		"current_time": ["uint64_t"]
 	},
 	"effects": {
-		"path_x": ["cwin"]
+		"path_x": ["cwin", "bytes_in_transit"]
 	}
 }

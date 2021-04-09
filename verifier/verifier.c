@@ -2,6 +2,21 @@
 
 /* WARNING : this file is automagically generated. */
 
+inline void init__uint8_t(uint8_t *param1)
+{
+  *param1 = dummy__uint8_t();
+}
+
+inline void assume_cp__uint8_t(uint8_t *src, uint8_t *dst)
+{
+  *dst = *src;
+}
+
+inline void assert_cp__uint8_t(uint8_t *src, uint8_t *dst, uint64_t flags)
+{
+  sassert(*dst == *src);
+}
+
 inline void init__picoquic_connection_id_t(picoquic_connection_id_t *param1)
 {
   param1->id[0] = dummy__uint8_t();
