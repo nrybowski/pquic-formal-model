@@ -167,9 +167,6 @@ extern int64_t dummy__int64_t();
 extern bool dummy__bool();
 extern unsigned long dummy__unsigned_long();
 extern char dummy__char();
-inline void init__uint8_t(uint8_t *param1);
-inline void assume_cp__uint8_t(uint8_t *src, uint8_t *dst);
-inline void assert_cp__uint8_t(uint8_t *param1, uint8_t *param2, uint64_t flags);
 inline void init__picoquic_connection_id_t(picoquic_connection_id_t *param1);
 inline void init__picoquic_tp_preferred_address_t(picoquic_tp_preferred_address_t *param1);
 inline void init__picoquic_tp_t(picoquic_tp_t *param1);
@@ -194,3 +191,24 @@ inline void assert_cp__picoquic_sack_item_t(picoquic_sack_item_t *param1, picoqu
 inline void assert_cp__picoquic_packet_context_t(picoquic_packet_context_t *param1, picoquic_packet_context_t *param2, uint64_t flags);
 inline void assert_cp__picoquic_path_t(picoquic_path_t *param1, picoquic_path_t *param2, uint64_t flags);
 inline void assert_cp__picoquic_packet_t(picoquic_packet_t *param1, picoquic_packet_t *param2, uint64_t flags);
+
+extern picoquic_packet_type_enum dummy__picoquic_packet_type_enum();
+extern picoquic_packet_context_enum dummy__picoquic_packet_context_enum();
+inline void init__picoquic_packet_header(picoquic_packet_header *param1);
+#define ASSERT_PICOQUIC_CNX_T__PROPOSED_VERSION 0x1
+#define ASSERT_PICOQUIC_CNX_T__VERSION_INDEX 0x2
+#define ASSERT_PICOQUIC_CNX_T__IS_0RTT_ACCEPTED 0x4
+#define ASSERT_PICOQUIC_CNX_T__REMOTE_PARAMETERS_RECEIVED 0x8
+#define ASSERT_PICOQUIC_CNX_T__CURRENT_SPIN 0x10
+#define ASSERT_PICOQUIC_CNX_T__CLIENT_MODE 0x20
+#define ASSERT_PICOQUIC_CNX_T__PREV_SPIN 0x40
+#define ASSERT_PICOQUIC_CNX_T__SPIN_VEC 0x80
+#define ASSERT_PICOQUIC_CNX_T__SPIN_EDGE 0x100
+#define ASSERT_PICOQUIC_CNX_T__SPIN_LAST_TRIGGER 0x200
+#define ASSERT_PICOQUIC_CNX_T__KEY_PHASE_ENC 0x400
+#define ASSERT_PICOQUIC_CNX_T__KEY_PHASE_DEC 0x800
+#define ASSERT_PICOQUIC_CNX_T__ZERO_RTT_DATA_ACCEPTED 0x1000
+#define ASSERT_PICOQUIC_CNX_T__ONE_RTT_DATA_ACKNOWLEDGED 0x2000
+#define ASSERT_PICOQUIC_CNX_T__PROCESSED_TRANSPORT_PARAMETER 0x4000
+#define ASSERT_PICOQUIC_CNX_T__MAX_EARLY_DATA_SIZE 0x8000
+

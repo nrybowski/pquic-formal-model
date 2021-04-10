@@ -2,19 +2,35 @@
 
 /* WARNING : this file is automagically generated. */
 
-inline void init__uint8_t(uint8_t *param1)
-{
-  *param1 = dummy__uint8_t();
+inline void init__picoquic_packet_header(picoquic_packet_header *param1) {
+  init__picoquic_connection_id_t(&param1->dest_cnx_id);
+  init__picoquic_connection_id_t(&param1->srce_cnx_id);
+  param1->pn = dummy__uint32_t();
+  param1->vn = dummy__uint32_t();
+  param1->offset = dummy__uint32_t();
+  param1->pn_offset = dummy__uint32_t();
+  param1->ptype = dummy__picoquic_packet_type_enum();
+  param1->pnmask = dummy__uint64_t();
+  param1->pn64 = dummy__uint64_t();
+  param1->payload_length = dummy__uint16_t();
+  param1->version_index = dummy__int();
+  param1->epoch = dummy__int();
+  param1->pc = dummy__picoquic_packet_context_enum();
+  param1->spin = dummy__unsigned_int();
+  param1->spin_vec = dummy__unsigned_int();
+  param1->has_spin_bit = dummy__unsigned_int();
+  param1->token_length = dummy__uint32_t();
+  param1->token_offset = dummy__uint32_t();
 }
 
-inline void assume_cp__uint8_t(uint8_t *src, uint8_t *dst)
+inline void assume_cp__picoquic_packet_header(picoquic_packet_header *src, picoquic_packet_header *dst)
 {
-  *dst = *src;
-}
-
-inline void assert_cp__uint8_t(uint8_t *src, uint8_t *dst, uint64_t flags)
-{
-  sassert(*dst == *src);
+  assume_cp__picoquic_connection_id_t(&src->dest_cnx_id, &dst->dest_cnx_id);
+  assume_cp__picoquic_connection_id_t(&src->srce_cnx_id, &dst->srce_cnx_id);
+  dst->pn = src->pn;
+  dst->vn = src->vn;
+  dst->offset = src->offset;
+  dst->pn_offset = src-pn_offset;
 }
 
 inline void init__picoquic_connection_id_t(picoquic_connection_id_t *param1)
