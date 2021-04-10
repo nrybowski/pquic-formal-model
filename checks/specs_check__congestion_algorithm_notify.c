@@ -41,7 +41,15 @@ int main()
   congestion_algorithm_notify(&cnx);
 
   sassert((&path_x) == ((picoquic_path_t *) cnx.protoop_inputv[0]));
-  assert_cp__picoquic_path_t((picoquic_path_t *) cnx.protoop_inputv[0], &path_x0, ASSERT_PICOQUIC_PATH_T__CWIN | ASSERT_PICOQUIC_PATH_T__BYTES_IN_TRANSIT);
+
+  uint64_t flags = ASSERT_PICOQUIC_PATH_T__CWIN | 
+    ASSERT_PICOQUIC_PATH_T__BYTES_IN_TRANSIT | 
+    ASSERT_PICOQUIC_PATH_T__PACING_BUCKET_MAX |
+    ASSERT_PICOQUIC_PATH_T__PACING_BUCKET_NANOSEC |
+    ASSERT_PICOQUIC_PATH_T__PACING_PACKET_TIME_NANOSEC |
+    ASSERT_PICOQUIC_PATH_T__PACING_PACKET_TIME_MICROSEC;
+
+  assert_cp__picoquic_path_t((picoquic_path_t *) cnx.protoop_inputv[0], &path_x0, flags);
   //assert_cp__picoquic_path_t((picoquic_path_t *) cnx.protoop_inputv[0], &path_x0, ASSERT_NONE); // should sat since cwin and bytes_in_transit are modified
   sassert(notification == ((picoquic_congestion_notification_t) cnx.protoop_inputv[1]));
   sassert(rtt_measurement == ((uint64_t) cnx.protoop_inputv[2]));

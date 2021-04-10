@@ -9,6 +9,6 @@
 		"current_time": ["uint64_t"]
 	},
 	"effects": {
-		"path_x": ["cwin", "bytes_in_transit"]
+		"path_x": ["cwin", "bytes_in_transit", "pacing_bucket_max", "pacing_bucket_nanosec", "pacing_packet_time_nanosec", "pacing_packet_time_microsec"]
 	}
 }
