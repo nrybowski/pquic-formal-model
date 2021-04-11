@@ -1,5 +1,6 @@
 #include "picoquic_internal.h"
 #include "seahorn/seahorn.h"
+#include <stdlib.h>
 
 /* WARNING : this file is automagically generated. */
 
@@ -162,15 +163,6 @@
 #define ASSERT_PICOQUIC_PACKET_HEADER__TOKEN_LENGTH 0x1000
 #define ASSERT_PICOQUIC_PACKET_HEADER__TOKEN_OFFSET 0x2000
 
-extern void dummy_cp__picoquic_cnx_t(picoquic_cnx_t *src, picoquic_cnx_t *dst);
-extern void dummy_cp__picoquic_tp_t(picoquic_tp_t *src, picoquic_tp_t *dst);
-extern void dummy_cp__picoquic_connection_id_t(picoquic_connection_id_t *src, picoquic_connection_id_t *dst);
-extern void dummy_cp__picoquic_tp_preferred_address_t(picoquic_tp_preferred_address_t *src, picoquic_tp_preferred_address_t *dst);
-extern void dummy_cp__picoquic_packet_context_t(picoquic_packet_context_t *src, picoquic_packet_context_t *dst);
-extern void dummy_cp__picoquic_sack_item_t(picoquic_sack_item_t *src, picoquic_sack_item_t *dst);
-extern void dummy_cp__picoquic_path_t(picoquic_path_t *src, picoquic_path_t *dst);
-extern void dummy_cp__picoquic_packet_t(picoquic_packet_t *src, picoquic_packet_t *dst);
-extern void dummy_cp__picoquic_packet_header(picoquic_packet_header *src, picoquic_packet_header *dst);
 extern uint8_t dummy__uint8_t();
 extern uint16_t dummy__uint16_t();
 extern uint64_t dummy__uint64_t();
@@ -182,6 +174,8 @@ extern size_t dummy__size_t();
 extern unsigned long dummy__unsigned_long();
 extern int64_t dummy__int64_t();
 extern bool dummy__bool();
+extern picoquic_packet_type_enum dummy__picoquic_packet_type_enum();
+extern picoquic_packet_context_enum dummy__picoquic_packet_context_enum();
 inline void init__picoquic_connection_id_t(picoquic_connection_id_t *param1);
 inline void init__picoquic_tp_preferred_address_t(picoquic_tp_preferred_address_t *param1);
 inline void init__picoquic_tp_t(picoquic_tp_t *param1);

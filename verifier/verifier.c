@@ -173,6 +173,17 @@ inline void init__picoquic_packet_context_t(picoquic_packet_context_t *param1)
   param1->latest_retransmit_cc_notification_time = dummy__uint64_t();
   param1->highest_acknowledged = dummy__uint64_t();
   param1->latest_time_acknowledged = dummy__uint64_t();
+  picoquic_packet_t *p1, *p2;
+  p1 = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_t));
+  assume(p1 != NULL);
+  init__picoquic_packet_t(p1);
+  p2 = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_context_t));
+  assume(p2 != NULL);
+  init__picoquic_packet_t(p2);
+  param1->retransmit_newest = p1;
+  param1->retransmit_oldest = p1;
+  param1->retransmitted_newest = p2;
+  param1->retransmitted_oldest = p2;
   param1->ack_needed = dummy__unsigned_int();
 }
 
@@ -250,6 +261,9 @@ inline void init__picoquic_path_t(picoquic_path_t *param1)
 
 inline void init__picoquic_packet_t(picoquic_packet_t *param1)
 {
+  param1->previous_packet = NULL;
+  param1->next_packet = NULL;
+  param1->send_path = NULL;
   param1->sequence_number = dummy__uint64_t();
   param1->send_time = dummy__uint64_t();
   param1->delivered_prior = dummy__uint64_t();
@@ -259,6 +273,8 @@ inline void init__picoquic_packet_t(picoquic_packet_t *param1)
   param1->send_length = dummy__uint32_t();
   param1->checksum_overhead = dummy__uint32_t();
   param1->offset = dummy__uint32_t();
+  param1->ptype = dummy__picoquic_packet_type_enum();
+  param1->pc = dummy__picoquic_packet_context_enum();
   param1->is_pure_ack = dummy__unsigned_int();
   param1->contains_crypto = dummy__unsigned_int();
   param1->is_congestion_controlled = dummy__unsigned_int();
@@ -266,7 +282,7 @@ inline void init__picoquic_packet_t(picoquic_packet_t *param1)
   param1->is_mtu_probe = dummy__unsigned_int();
   param1->delivered_app_limited = dummy__unsigned_int();
   param1->has_handshake_done = dummy__unsigned_int();
-  param1->bytes[0] = dummy__uint8_t();
+  /*param1->bytes[0] = dummy__uint8_t();
   param1->bytes[1] = dummy__uint8_t();
   param1->bytes[2] = dummy__uint8_t();
   param1->bytes[3] = dummy__uint8_t();
@@ -1801,7 +1817,7 @@ inline void init__picoquic_packet_t(picoquic_packet_t *param1)
   param1->bytes[1532] = dummy__uint8_t();
   param1->bytes[1533] = dummy__uint8_t();
   param1->bytes[1534] = dummy__uint8_t();
-  param1->bytes[1535] = dummy__uint8_t();
+  param1->bytes[1535] = dummy__uint8_t();*/
 }
 
 inline void init__picoquic_packet_header(picoquic_packet_header *param1)
@@ -1995,6 +2011,14 @@ inline void assume_cp__picoquic_packet_context_t(picoquic_packet_context_t *src,
   dst->latest_retransmit_cc_notification_time = src->latest_retransmit_cc_notification_time;
   dst->highest_acknowledged = src->highest_acknowledged;
   dst->latest_time_acknowledged = src->latest_time_acknowledged;
+  dst->retransmit_newest = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_t));
+  dst->retransmit_oldest = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_t));
+  dst->retransmitted_newest = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_t));
+  dst->retransmitted_oldest = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_t));
+  assume_cp__picoquic_packet_t(src->retransmit_newest, dst->retransmit_newest);
+  assume_cp__picoquic_packet_t(src->retransmit_oldest, dst->retransmit_oldest);
+  assume_cp__picoquic_packet_t(src->retransmitted_newest, dst->retransmitted_newest);
+  assume_cp__picoquic_packet_t(src->retransmitted_oldest, dst->retransmitted_oldest);
   dst->ack_needed = src->ack_needed;
 }
 
@@ -2081,6 +2105,8 @@ inline void assume_cp__picoquic_packet_t(picoquic_packet_t *src, picoquic_packet
   dst->send_length = src->send_length;
   dst->checksum_overhead = src->checksum_overhead;
   dst->offset = src->offset;
+  dst->ptype = src->ptype;
+  dst->pc = src->pc;
   dst->is_pure_ack = src->is_pure_ack;
   dst->contains_crypto = src->contains_crypto;
   dst->is_congestion_controlled = src->is_congestion_controlled;
@@ -2088,7 +2114,7 @@ inline void assume_cp__picoquic_packet_t(picoquic_packet_t *src, picoquic_packet
   dst->is_mtu_probe = src->is_mtu_probe;
   dst->delivered_app_limited = src->delivered_app_limited;
   dst->has_handshake_done = src->has_handshake_done;
-  dst->bytes[0] = src->bytes[0];
+  /*dst->bytes[0] = src->bytes[0];
   dst->bytes[1] = src->bytes[1];
   dst->bytes[2] = src->bytes[2];
   dst->bytes[3] = src->bytes[3];
@@ -3623,7 +3649,7 @@ inline void assume_cp__picoquic_packet_t(picoquic_packet_t *src, picoquic_packet
   dst->bytes[1532] = src->bytes[1532];
   dst->bytes[1533] = src->bytes[1533];
   dst->bytes[1534] = src->bytes[1534];
-  dst->bytes[1535] = src->bytes[1535];
+  dst->bytes[1535] = src->bytes[1535];*/
 }
 
 inline void assume_cp__picoquic_packet_header(picoquic_packet_header *src, picoquic_packet_header *dst)
@@ -3834,6 +3860,10 @@ inline void assert_cp__picoquic_packet_context_t(picoquic_packet_context_t *para
   cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__LATEST_RETRANSMIT_CC_NOTIFICATION_TIME) || (param1->latest_retransmit_cc_notification_time == param2->latest_retransmit_cc_notification_time);
   cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__HIGHEST_ACKNOWLEDGED) || (param1->highest_acknowledged == param2->highest_acknowledged);
   cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__LATEST_TIME_ACKNOWLEDGED) || (param1->latest_time_acknowledged == param2->latest_time_acknowledged);
+  assert_cp__picoquic_packet_t(param1->retransmit_newest, param2->retransmit_newest, ASSERT_NONE);
+  assert_cp__picoquic_packet_t(param1->retransmit_oldest, param2->retransmit_oldest, ASSERT_NONE);
+  assert_cp__picoquic_packet_t(param1->retransmitted_newest, param2->retransmitted_newest, ASSERT_NONE);
+  assert_cp__picoquic_packet_t(param1->retransmitted_oldest, param2->retransmitted_oldest, ASSERT_NONE);
   cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__ACK_NEEDED) || (param1->ack_needed == param2->ack_needed);
   sassert(cond);
 }
@@ -3933,7 +3963,7 @@ inline void assert_cp__picoquic_packet_t(picoquic_packet_t *param1, picoquic_pac
   cond &= (flags & ASSERT_PICOQUIC_PACKET_T__IS_MTU_PROBE) || (param1->is_mtu_probe == param2->is_mtu_probe);
   cond &= (flags & ASSERT_PICOQUIC_PACKET_T__DELIVERED_APP_LIMITED) || (param1->delivered_app_limited == param2->delivered_app_limited);
   cond &= (flags & ASSERT_PICOQUIC_PACKET_T__HAS_HANDSHAKE_DONE) || (param1->has_handshake_done == param2->has_handshake_done);
-  cond &= param1->bytes[0] == param2->bytes[0];
+  /*cond &= param1->bytes[0] == param2->bytes[0];
   cond &= param1->bytes[1] == param2->bytes[1];
   cond &= param1->bytes[2] == param2->bytes[2];
   cond &= param1->bytes[3] == param2->bytes[3];
@@ -5468,7 +5498,7 @@ inline void assert_cp__picoquic_packet_t(picoquic_packet_t *param1, picoquic_pac
   cond &= param1->bytes[1532] == param2->bytes[1532];
   cond &= param1->bytes[1533] == param2->bytes[1533];
   cond &= param1->bytes[1534] == param2->bytes[1534];
-  cond &= param1->bytes[1535] == param2->bytes[1535];
+  cond &= param1->bytes[1535] == param2->bytes[1535];*/
   sassert(cond);
 }
 
