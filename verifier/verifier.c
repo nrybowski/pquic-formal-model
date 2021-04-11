@@ -155,14 +155,32 @@ inline void init__picoquic_cnx_t(picoquic_cnx_t *param1)
 
 inline void init__picoquic_sack_item_t(picoquic_sack_item_t *param1)
 {
+  param1->next_sack = NULL;
   param1->start_of_sack_range = dummy__uint64_t();
   param1->end_of_sack_range = dummy__uint64_t();
+  assume(param1->end_of_sack_range > param1->start_of_sack_range);
 }
 
 inline void init__picoquic_packet_context_t(picoquic_packet_context_t *param1)
 {
   param1->send_sequence = dummy__uint64_t();
-  init__picoquic_sack_item_t(&param1->first_sack_item);
+
+  picoquic_sack_item_t *si = (picoquic_sack_item_t*) malloc(sizeof(picoquic_sack_item_t)), *runner = NULL, *head = NULL;
+  init__picoquic_sack_item_t(si);
+  runner = si;
+  head = si;
+
+  for(uint64_t i=0; i<dummy__uint64_t(); i++) {
+    si = (picoquic_sack_item_t*) malloc(sizeof(picoquic_sack_item_t));
+    init__picoquic_sack_item_t(si);
+    runner->next_sack = si;
+    runner = si;
+  }
+
+  param1->first_sack_item.next_sack = head->next_sack;
+  param1->first_sack_item.start_of_sack_range = head->start_of_sack_range;
+  param1->first_sack_item.end_of_sack_range = head->end_of_sack_range;
+
   param1->time_stamp_largest_received = dummy__uint64_t();
   param1->highest_ack_sent = dummy__uint64_t();
   param1->highest_ack_time = dummy__uint64_t();
@@ -2000,7 +2018,23 @@ inline void assume_cp__picoquic_sack_item_t(picoquic_sack_item_t *src, picoquic_
 inline void assume_cp__picoquic_packet_context_t(picoquic_packet_context_t *src, picoquic_packet_context_t *dst)
 {
   dst->send_sequence = src->send_sequence;
-  assume_cp__picoquic_sack_item_t(&src->first_sack_item, &dst->first_sack_item);
+
+  picoquic_sack_item_t *src_runner = &src->first_sack_item, *si, *runner, *head;
+  while(src_runner != NULL) {
+    si = (picoquic_sack_item_t*) malloc(sizeof(picoquic_sack_item_t));
+    assume_cp__picoquic_sack_item_t(src_runner, si);
+    if (src_runner != &src->first_sack_item)
+      runner->next_sack = si;
+    else
+      head = si;
+    runner = si;
+    src_runner = src_runner->next_sack;
+  }
+
+  dst->first_sack_item.next_sack = head->next_sack;
+  dst->first_sack_item.start_of_sack_range = head->start_of_sack_range;
+  dst->first_sack_item.end_of_sack_range = head->end_of_sack_range;
+
   dst->time_stamp_largest_received = src->time_stamp_largest_received;
   dst->highest_ack_sent = src->highest_ack_sent;
   dst->highest_ack_time = src->highest_ack_time;
@@ -3849,7 +3883,12 @@ inline void assert_cp__picoquic_packet_context_t(picoquic_packet_context_t *para
   sassert(param1 != param2);
   unsigned int cond = 1;
   cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__SEND_SEQUENCE) || (param1->send_sequence == param2->send_sequence);
-  assert_cp__picoquic_sack_item_t(&param1->first_sack_item, &param2->first_sack_item, 0);
+
+  picoquic_sack_item_t *runner1 = &param1->first_sack_item, *runner2 = &param2->first_sack_item;
+  while(runner1 != NULL && runner2 != NULL)
+    assert_cp__picoquic_sack_item_t(runner1, runner2, ASSERT_NONE);
+  cond &= runner1 == NULL && runner2 == NULL;
+
   cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__TIME_STAMP_LARGEST_RECEIVED) || (param1->time_stamp_largest_received == param2->time_stamp_largest_received);
   cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__HIGHEST_ACK_SENT) || (param1->highest_ack_sent == param2->highest_ack_sent);
   cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__HIGHEST_ACK_TIME) || (param1->highest_ack_time == param2->highest_ack_time);
