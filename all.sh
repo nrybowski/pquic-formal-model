@@ -6,21 +6,21 @@ DOCKERFILE=$(mktemp --tmpdir="/tmp")
 cat <<EOF >> ${DOCKERFILE}
 FROM seahorn/seahorn-llvm10:nightly
 
-RUN DEBIAN_FRONTEND=NONINTERACTIVE echo horn | sudo -S apt-get update
-RUN DEBIAN_FRONTEND=NONINTERACTIVE echo horn | sudo -S apt-get install -y --fix-missing libarchive-dev libssl-dev
+RUN echo horn | sudo -S apt-get update
+RUN echo horn | sudo -S DEBIAN_FRONTEND=noninteractive su -p - -c "apt-get install -y --no-install-recommends --fix-missing libarchive-dev libssl-dev expect"
 
 WORKDIR /opt
 COPY ./pquic/picoquic pquic/picoquic
-RUN echo horn | sudo -S mv pquic/picoquic/frames.c pquic/picoquic/frames.c.old
-RUN echo horn | sudo -S mv pquic/picoquic/quicctx.c pquic/picoquic/quicctx.c.old
+#RUN echo horn | sudo -S mv pquic/picoquic/frames.c pquic/picoquic/frames.c.old
+#RUN echo horn | sudo -S mv pquic/picoquic/quicctx.c pquic/picoquic/quicctx.c.old
 
 COPY ./checks model/checks
 COPY ./verifier model/verifier
 COPY ./counter_examples /mount
 
-COPY test.sh script.sh
-
-CMD ./script.sh
+WORKDIR /tmp
+COPY test.sh run_expect.sh ./
+CMD ./test.sh
 EOF
 
 docker build -t "${CONTAINER_NAME}" -f "${DOCKERFILE}" .
