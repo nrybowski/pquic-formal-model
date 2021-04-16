@@ -16,15 +16,18 @@ COPY ./pquic/picoquic pquic/picoquic
 
 COPY ./checks model/checks
 COPY ./verifier model/verifier
-COPY ./counter_examples /mount
 
 WORKDIR /tmp
-COPY test.sh run_expect.sh ./
-CMD ./test.sh
+COPY run_expect.sh ./
+CMD /mount/test.sh
 EOF
 
-docker build -t "${CONTAINER_NAME}" -f "${DOCKERFILE}" .
+docker build -t "${CONTAINER_NAME}" -f "${DOCKERFILE}" ..
 rm "${DOCKERFILE}"
 
-# Launch all tests
-docker run --rm ${CONTAINER_NAME}
+# Launch false negative tests
+echo -e "\n\nTests for simple false negatives"
+echo "================================"
+docker run --rm -v $(pwd)/false_negative:/mount ${CONTAINER_NAME}
+
+#docker run --rm -v $(pwd)/false_positive:/mount ${CONTAINER_NAME}

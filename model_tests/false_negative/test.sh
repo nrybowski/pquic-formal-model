@@ -81,8 +81,6 @@ run_test() {
 CE_DIR="/mount/"
 CES=($(ls "${CE_DIR}"))
 
-echo -e "\n\nBegin tests\n"
-
 for CE in ${CES[@]}
 do
 	CURDIR="${CE_DIR}/${CE}"
