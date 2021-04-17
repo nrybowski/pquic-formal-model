@@ -58,6 +58,10 @@ int main()
   sassert(current_time == ((uint64_t) cnx.protoop_inputv[5]));
   assert_cp__picoquic_cnx_t(&cnx, &cnx0, ASSERT_NONE);
 
+#ifdef SASSERT_FALSE
+  sassert(0);
+#endif
+
   return 0;
 }
 

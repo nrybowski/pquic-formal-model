@@ -27,6 +27,9 @@ int main()
   sassert((&path_x) == ((picoquic_path_t *) cnx.protoop_inputv[2]));
   assert_cp__picoquic_path_t((picoquic_path_t *) cnx.protoop_inputv[2], &path_x0, ASSERT_NONE);
   assert_cp__picoquic_cnx_t(&cnx, &cnx0, ASSERT_NONE);
+#ifdef SASSERT_FALSE
+  sassert(0);
+#endif
   return 0;
 }
 

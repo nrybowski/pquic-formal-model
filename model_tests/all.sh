@@ -18,18 +18,17 @@ COPY ./checks model/checks
 COPY ./verifier model/verifier
 
 WORKDIR /tmp
-COPY model_tests/run_expect.sh ./
-CMD /mount/test.sh
+COPY model_tests/run_expect.sh  model_tests/test.sh ./
+ENTRYPOINT ["./test.sh"]
+CMD [""]
 EOF
 
-docker build -t "${CONTAINER_NAME}" -f "${DOCKERFILE}" ..
+echo "Building test container"
+docker build -t "${CONTAINER_NAME}" -f "${DOCKERFILE}" .. > /dev/null 2>&1
 rm "${DOCKERFILE}"
 
-echo -e "\n\nTesting for simple false positives"
-echo "================================"
-docker run --rm -v $(pwd)/false_positive:/mount ${CONTAINER_NAME}
+# Launch false positive tests
+docker run --rm -v $(pwd)/false_positive:/mount ${CONTAINER_NAME} 1
 
 # Launch false negative tests
-echo -e "\n\nTesting for simple false negatives"
-echo "================================"
-#docker run --rm -v $(pwd)/false_negative:/mount ${CONTAINER_NAME}
+docker run --rm -v $(pwd)/false_negative:/mount ${CONTAINER_NAME} 0
