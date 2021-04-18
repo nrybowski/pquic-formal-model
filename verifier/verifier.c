@@ -92,6 +92,11 @@ inline void init__picoquic_tp_t(picoquic_tp_t *param1)
 
 inline void init__picoquic_cnx_t(picoquic_cnx_t *param1)
 {
+  param1->quic = NULL;
+  param1->next_in_table = NULL;
+  param1->previous_in_table = NULL;
+  param1->first_cnx_id = NULL;
+  param1->first_net_id = NULL;
   param1->proposed_version = dummy__uint32_t();
   param1->version_index = dummy__int();
   param1->is_0RTT_accepted = dummy__unsigned_int();
@@ -109,7 +114,12 @@ inline void init__picoquic_cnx_t(picoquic_cnx_t *param1)
   param1->processed_transport_parameter = dummy__unsigned_int();
   init__picoquic_tp_t(&param1->local_parameters);
   init__picoquic_tp_t(&param1->remote_parameters);
+  param1->sni = NULL;
+  param1->alpn = NULL;
   param1->max_early_data_size = dummy__size_t();
+  param1->callback_fn = NULL;
+  param1->callback_ctx = NULL;
+  param1->cnx_state = dummy__picoquic_state_enum();
   init__picoquic_connection_id_t(&param1->initial_cnxid);
   param1->start_time = dummy__uint64_t();
   param1->application_error = dummy__uint64_t();
@@ -122,7 +132,13 @@ inline void init__picoquic_cnx_t(picoquic_cnx_t *param1)
   param1->handshake_done_sent = dummy__unsigned_int();
   param1->handshake_done_acked = dummy__unsigned_int();
   param1->next_wake_time = dummy__uint64_t();
+  param1->next_by_wake_time = NULL;
+  param1->previous_by_wake_time = NULL;
+  param1->tls_ctx = NULL;
+  param1->tls_sendbuf = NULL;
   param1->psk_cipher_suite_id = dummy__uint16_t();
+  //param1->tls_stream;
+  //param1->crypto_context
   param1->latest_progress_time = dummy__uint64_t();
   param1->nb_bytes_queued = dummy__uint64_t();
   param1->nb_path_challenge_sent = dummy__uint32_t();
@@ -131,6 +147,7 @@ inline void init__picoquic_cnx_t(picoquic_cnx_t *param1)
   param1->nb_zero_rtt_acked = dummy__uint32_t();
   param1->nb_retransmission_total = dummy__uint64_t();
   param1->nb_spurious = dummy__uint64_t();
+  param1->congestion_alg = NULL;
   param1->data_sent = dummy__uint64_t();
   param1->data_received = dummy__uint64_t();
   param1->maxdata_local = dummy__uint64_t();
@@ -141,16 +158,37 @@ inline void init__picoquic_cnx_t(picoquic_cnx_t *param1)
   param1->max_stream_id_unidir_local_computed = dummy__uint64_t();
   param1->max_stream_id_bidir_remote = dummy__uint64_t();
   param1->max_stream_id_unidir_remote = dummy__uint64_t();
+  param1->first_stream = NULL;
   param1->last_visited_stream_id = dummy__uint64_t();
   param1->last_visited_plugin_stream_id = dummy__uint64_t();
   param1->keep_alive_interval = dummy__uint64_t();
   param1->nb_paths = dummy__int();
   param1->nb_path_alloc = dummy__int();
+  param1->path = NULL;
+  param1->reserved_frames = NULL;
+  param1->retry_frames = NULL;
+  for (int i=0; i<picoquic_nb_packet_context; i++)
+    param1->rtx_frames[i] = NULL;
+  param1->first_drr = NULL;
   param1->core_rate = dummy__uint16_t();
   param1->wake_now = dummy__uint8_t();
   param1->plugin_requested = dummy__uint8_t();
+  // param1->pids_to_request
+  param1->first_plugin_stream = NULL;
+  param1->ops = NULL;
+  param1->plugins = NULL;
+  param1->metadata = NULL;
   param1->protoop_inputc = dummy__int();
+  for (int i=0; i<PROTOOPARGS_MAX; i++) {
+    param1->protoop_inputv[i] = 0;
+    param1->protoop_outputv[i] = 0;
+  }
   param1->protoop_outputc_callee = dummy__int();
+  param1->protoop_output = 0;
+  param1->current_protoop = NULL;
+  param1->current_anchor = pluglet_replace;
+  param1->current_plugin = NULL;
+  param1->previous_plugin_in_replace = NULL;
 }
 
 inline void init__picoquic_sack_item_t(picoquic_sack_item_t *param1)
@@ -1948,6 +1986,11 @@ inline void assume_cp__picoquic_tp_t(picoquic_tp_t *src, picoquic_tp_t *dst)
 
 inline void assume_cp__picoquic_cnx_t(picoquic_cnx_t *src, picoquic_cnx_t *dst)
 {
+  dst->quic = NULL;
+  dst->next_in_table = NULL;
+  dst->previous_in_table = NULL;
+  dst->first_cnx_id = NULL;
+  dst->first_net_id = NULL;
   dst->proposed_version = src->proposed_version;
   dst->version_index = src->version_index;
   dst->is_0RTT_accepted = src->is_0RTT_accepted;
@@ -1965,7 +2008,12 @@ inline void assume_cp__picoquic_cnx_t(picoquic_cnx_t *src, picoquic_cnx_t *dst)
   dst->processed_transport_parameter = src->processed_transport_parameter;
   assume_cp__picoquic_tp_t(&src->local_parameters, &dst->local_parameters);
   assume_cp__picoquic_tp_t(&src->remote_parameters, &dst->remote_parameters);
+  dst->sni = NULL;
+  dst->alpn = NULL;
   dst->max_early_data_size = src->max_early_data_size;
+  dst->callback_fn = NULL;
+  dst->callback_ctx = NULL;
+  dst->cnx_state = src->cnx_state;
   assume_cp__picoquic_connection_id_t(&src->initial_cnxid, &dst->initial_cnxid);
   dst->start_time = src->start_time;
   dst->application_error = src->application_error;
@@ -1978,7 +2026,13 @@ inline void assume_cp__picoquic_cnx_t(picoquic_cnx_t *src, picoquic_cnx_t *dst)
   dst->handshake_done_sent = src->handshake_done_sent;
   dst->handshake_done_acked = src->handshake_done_acked;
   dst->next_wake_time = src->next_wake_time;
+  dst->next_by_wake_time = NULL;
+  dst->previous_by_wake_time = NULL;
+  dst->tls_ctx = NULL;
+  dst->tls_sendbuf = NULL;
   dst->psk_cipher_suite_id = src->psk_cipher_suite_id;
+  //dst->tls_stream;
+  //dst->crypto_context;
   dst->latest_progress_time = src->latest_progress_time;
   dst->nb_bytes_queued = src->nb_bytes_queued;
   dst->nb_path_challenge_sent = src->nb_path_challenge_sent;
@@ -1987,6 +2041,7 @@ inline void assume_cp__picoquic_cnx_t(picoquic_cnx_t *src, picoquic_cnx_t *dst)
   dst->nb_zero_rtt_acked = src->nb_zero_rtt_acked;
   dst->nb_retransmission_total = src->nb_retransmission_total;
   dst->nb_spurious = src->nb_spurious;
+  dst->congestion_alg = NULL;
   dst->data_sent = src->data_sent;
   dst->data_received = src->data_received;
   dst->maxdata_local = src->maxdata_local;
@@ -1997,16 +2052,38 @@ inline void assume_cp__picoquic_cnx_t(picoquic_cnx_t *src, picoquic_cnx_t *dst)
   dst->max_stream_id_unidir_local_computed = src->max_stream_id_unidir_local_computed;
   dst->max_stream_id_bidir_remote = src->max_stream_id_bidir_remote;
   dst->max_stream_id_unidir_remote = src->max_stream_id_unidir_remote;
+  dst->first_stream = NULL;
   dst->last_visited_stream_id = src->last_visited_stream_id;
   dst->last_visited_plugin_stream_id = src->last_visited_plugin_stream_id;
   dst->keep_alive_interval = src->keep_alive_interval;
   dst->nb_paths = src->nb_paths;
   dst->nb_path_alloc = src->nb_path_alloc;
+  //picoquic_path_t *path = (picoquic_path_t*) malloc(sizeof(picoquic_path_t)*param1->nb_paths);
+  dst->path = NULL;
+  dst->reserved_frames = NULL;
+  dst->retry_frames = NULL;
+  for (int i=0; i<picoquic_nb_packet_context; i++)
+    dst->rtx_frames[i] = NULL;
+  dst->first_drr = NULL;
   dst->core_rate = src->core_rate;
   dst->wake_now = src->wake_now;
   dst->plugin_requested = src->plugin_requested;
+  // param1->pids_to_request
+  dst->first_plugin_stream = NULL;
+  dst->ops = NULL;
+  dst->plugins = NULL;
+  dst->metadata = NULL;
   dst->protoop_inputc = src->protoop_inputc;
+  for (int i=0; i<PROTOOPARGS_MAX; i++) {
+    dst->protoop_inputv[i] = 0;
+    dst->protoop_outputv[i] = 0;
+  }
   dst->protoop_outputc_callee = src->protoop_outputc_callee;
+  dst->protoop_output = 0;
+  dst->current_protoop = NULL;
+  dst->current_anchor = pluglet_replace;
+  dst->current_plugin = NULL;
+  dst->previous_plugin_in_replace = NULL;
 }
 
 inline void assume_cp__picoquic_sack_item_t(picoquic_sack_item_t *src, picoquic_sack_item_t *dst)

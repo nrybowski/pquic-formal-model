@@ -1,4 +1,5 @@
 #include "picoquic_internal.h"
+#include "plugin.h"
 #include "seahorn/seahorn.h"
 #include <stdlib.h>
 
@@ -176,6 +177,7 @@ extern int64_t dummy__int64_t();
 extern bool dummy__bool();
 extern picoquic_packet_type_enum dummy__picoquic_packet_type_enum();
 extern picoquic_packet_context_enum dummy__picoquic_packet_context_enum();
+extern picoquic_state_enum dummy__picoquic_state_enum();
 inline void init__picoquic_connection_id_t(picoquic_connection_id_t *param1);
 inline void init__picoquic_tp_preferred_address_t(picoquic_tp_preferred_address_t *param1);
 inline void init__picoquic_tp_t(picoquic_tp_t *param1);
