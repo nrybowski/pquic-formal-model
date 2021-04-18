@@ -1,5 +1,22 @@
 #! /bin/sh -e
 
+POSITIVE=0
+NEGATIVE=0
+
+while [[ "$#" -gt 0 ]]
+do
+	case "${1}" in
+		-p|--positive)
+			POSITIVE=1
+		shift
+		;;
+		-n|--negative)
+			NEGATIVE=1
+		shift
+		;;
+	esac
+done
+
 CONTAINER_NAME="seahorn_counter_examples"
 DOCKERFILE=$(mktemp --tmpdir="/tmp")
 
@@ -27,8 +44,14 @@ echo "Building test container"
 docker build -t "${CONTAINER_NAME}" -f "${DOCKERFILE}" .. > /dev/null 2>&1
 rm "${DOCKERFILE}"
 
-# Launch false positive tests
-docker run --rm -v $(pwd)/false_positive:/mount ${CONTAINER_NAME} 1
+if [[ $((${POSITIVE} && !${NEGATIVE} || !${POSITIVE} && !${NEGATIVE})) -eq 1 ]] 
+then
+	# Launch false positive tests
+	docker run --rm -v $(pwd)/false_positive:/mount ${CONTAINER_NAME} 1
+fi
 
-# Launch false negative tests
-docker run --rm -v $(pwd)/false_negative:/mount ${CONTAINER_NAME} 0
+if [[ $((!${POSITIVE} && ${NEGATIVE} || !${POSITIVE} && !${NEGATIVE})) -eq 1 ]] 
+then
+	# Launch false negative tests
+	docker run --rm -v $(pwd)/false_negative:/mount ${CONTAINER_NAME} 0
+fi

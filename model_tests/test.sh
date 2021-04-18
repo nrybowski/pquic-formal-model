@@ -17,12 +17,7 @@ run_test() {
 	local unsat_bug="${3}"
 
 	local out=$(mktemp --tmpdir="/tmp")
-	if [[ "${POSITIVE}" == "1" ]]
-	then
-		local files="/mount/${test_case} /opt/model/checks/specs_check__${test_case}"
-	else
-		local files="/mount/${pluglet}/${test_case} /opt/model/checks/specs_check__${pluglet}.c"
-	fi
+	local files="/mount/${pluglet}/${test_case} /opt/model/checks/specs_check__${pluglet}.c"
 
 	# Launch SH verification on the test case
 	if [[ ${unsat_bug} -eq 1 ]]
@@ -56,12 +51,7 @@ run_test() {
 
 				echo "* Verifying if SeaHorn bug"
 				rm "${out}"
-				if [[ "${POSITIVE}" == "1" ]] 
-				then
-					run_test "UNUSED" "${test_case}" 1
-				else
-					run_test "${pluglet}" "${test_case}" 1
-				fi
+				run_test "${pluglet}" "${test_case}" 1
 			fi
 		else
 			grep -E "sat" "${out}" > /dev/null
@@ -139,60 +129,48 @@ run_test() {
 
 # Main loop on the tests cases for each protoop
 CE_DIR="/mount/"
-
+CES=($(ls "${CE_DIR}"))
 if [[ "${POSITIVE}" == "1" ]]
 then
 	echo -e "\n\nTesting for simple false positives"
-	echo "=================================="
-	CES=($(ls "${CE_DIR}" | grep -E '\.c'))
+else
+	echo -e "\n\nTesting for simple false negatives"
+fi
+echo "=================================="
 
-	for CE in ${CES[@]}
-	do
-		echo "-> Testing protoop <${CE}>"
-		((COUNT++))
-		run_test "UNUSED" "${CE}" 0
-	done
+for CE in ${CES[@]}
+do
+	CURDIR="${CE_DIR}/${CE}"
+	if [[ -d "${CURDIR}" ]]
+	then
+		echo "Testing protoop <${CE}>"
 
+		CASES=($(ls ${CURDIR} | grep -E '\.c'))
+		for TEST_CASE in ${CASES[@]} 
+		do
+			((COUNT++))
+			echo "-> Test <${TEST_CASE}>"
+			run_test "${CE}" "${TEST_CASE}" 0
+		done
+	fi
+done
+
+echo -e "\nResults:"
+if [[ "${POSITIVE}" == "1" ]]
+then
 	cat <<EOF
-
-Results:
 - ${UNSAT_D_SAT}/${COUNT} correct unsat
 - ${SAT}/0 sat when should unsat (Invalid model)
-- ${UNSAT_D_UNSAT}/0 buggy unsat
-- ${UNK_STATE}/0 unkown state. Test has probably timed out (memory/cpu)
-- ${CEX_SOLVER}/0 CEX and Solver do not agree on sat.
 EOF
-
 else
-
-	echo -e "\n\nTesting for simple false negatives"
-	echo "=================================="
-	CES=($(ls "${CE_DIR}"))
-
-	for CE in ${CES[@]}
-	do
-		CURDIR="${CE_DIR}/${CE}"
-		if [[ -d "${CURDIR}" ]]
-		then
-			echo "Testing protoop <${CE}>"
-
-			CASES=($(ls ${CURDIR} | grep -E '\.c'))
-			for TEST_CASE in ${CASES[@]} 
-			do
-				((COUNT++))
-				echo "-> Test <${TEST_CASE}>"
-				run_test "${CE}" "${TEST_CASE}" 0
-			done
-		fi
-	done
-	
 	cat << EOF
-
-Results:
 - ${SAT}/${COUNT} correct sat.
 - ${UNSAT_D_SAT}/0 incorrect unsat (Invalid model).
+EOF
+fi
+
+cat <<EOF
 - ${UNSAT_D_UNSAT}/0 buggy unsat
 - ${UNK_STATE}/0 unkown state. Test has probably timed out (memory/cpu)
 - ${CEX_SOLVER}/0 CEX and Solver do not agree on sat.
 EOF
-fi
