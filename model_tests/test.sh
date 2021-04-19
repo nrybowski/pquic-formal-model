@@ -109,9 +109,10 @@ run_test() {
 				fi
 			else
 				# Should not happen, it means that seahorn TO or crashed for other reasons
-				echo -e "* Unknown state\n"
+				echo "* Unknown state"
 				((UNK_STATE++))
-				cat "${out}"
+				mv "${out}" "${test_case}.output"
+				#cat "${out}"
 			fi
 		fi
 
@@ -149,7 +150,7 @@ do
 		for TEST_CASE in ${CASES[@]} 
 		do
 			((COUNT++))
-			echo "-> Test <${TEST_CASE}>"
+			echo "-> Test (${COUNT}) <${TEST_CASE}>"
 			run_test "${CE}" "${TEST_CASE}" 0
 		done
 	fi
