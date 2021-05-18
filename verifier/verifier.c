@@ -165,10 +165,8 @@ inline void init__picoquic_cnx_t(picoquic_cnx_t *param1)
   param1->nb_paths = dummy__int();
   param1->nb_path_alloc = dummy__int();
 
-  // timeout without assume
-  //assume(param1->nb_paths < 2 && param1->nb_paths > 0); // timeout
-  param1->nb_paths = 1;
-  // param1->nb_paths = 2; // unsat with sassert(0)
+  //assume(param1->nb_paths > 0);
+  param1->nb_paths = 1; // hard-coded due to invalid behavior otherwise
   param1->path = (picoquic_path_t**) malloc(sizeof(picoquic_path_t*)*param1->nb_paths);
   for (int i=0; i<param1->nb_paths; i++) {
     param1->path[i] = (picoquic_path_t*) malloc(sizeof(picoquic_path_t));
@@ -213,21 +211,15 @@ inline void init__picoquic_packet_context_t(picoquic_packet_context_t *param1)
 {
   param1->send_sequence = dummy__uint64_t();
 
-  picoquic_sack_item_t *si = (picoquic_sack_item_t*) malloc(sizeof(picoquic_sack_item_t)), *runner = NULL, *head = NULL;
-  init__picoquic_sack_item_t(si);
-  runner = si;
-  head = si;
+  init__picoquic_sack_item_t(&param1->first_sack_item);
+  picoquic_sack_item_t *node = (picoquic_sack_item_t*) &param1->first_sack_item, *runner = node; 
 
   for(uint64_t i=0; i<dummy__uint64_t(); i++) {
-    si = (picoquic_sack_item_t*) malloc(sizeof(picoquic_sack_item_t));
-    init__picoquic_sack_item_t(si);
-    runner->next_sack = si;
-    runner = si;
+    node = (picoquic_sack_item_t*) malloc(sizeof(picoquic_sack_item_t));
+    init__picoquic_sack_item_t(node);
+    runner->next_sack = node;
+    runner = node;
   }
-
-  param1->first_sack_item.next_sack = head->next_sack;
-  param1->first_sack_item.start_of_sack_range = head->start_of_sack_range;
-  param1->first_sack_item.end_of_sack_range = head->end_of_sack_range;
 
   param1->time_stamp_largest_received = dummy__uint64_t();
   param1->highest_ack_sent = dummy__uint64_t();
@@ -239,17 +231,34 @@ inline void init__picoquic_packet_context_t(picoquic_packet_context_t *param1)
   param1->latest_retransmit_cc_notification_time = dummy__uint64_t();
   param1->highest_acknowledged = dummy__uint64_t();
   param1->latest_time_acknowledged = dummy__uint64_t();
-  picoquic_packet_t *p1, *p2;
+  picoquic_packet_t *p1, *p2, *prev1;
   p1 = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_t));
   assume(p1 != NULL);
   init__picoquic_packet_t(p1);
-  p2 = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_context_t));
+  p2 = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_t));
   assume(p2 != NULL);
   init__picoquic_packet_t(p2);
   param1->retransmit_newest = p1;
   param1->retransmit_oldest = p1;
   param1->retransmitted_newest = p2;
-  param1->retransmitted_oldest = p2;
+  param1->retransmitted_oldest = p2; 
+
+  /*uint64_t size = dummy__uint64_t();
+  assume(size > 0);
+  for (uint64_t i=0; i<size; i++) {
+    p1 = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_t));
+    init__picoquic_packet_t(p1);
+    if (i==0)
+      param1->retransmit_oldest = p1;
+    else {
+      prev1->next_packet = p1;
+      p1->previous_packet = prev1;
+    }
+
+    prev1 = p1;
+  }
+  param1->retransmit_newest = p1;*/
+
   param1->ack_needed = dummy__unsigned_int();
 }
 
@@ -547,6 +556,23 @@ inline void assume_cp__picoquic_packet_context_t(picoquic_packet_context_t *src,
   dst->latest_retransmit_cc_notification_time = src->latest_retransmit_cc_notification_time;
   dst->highest_acknowledged = src->highest_acknowledged;
   dst->latest_time_acknowledged = src->latest_time_acknowledged;
+
+  /*picoquic_packet_t *ppt_runner1 = src->retransmit_oldest, *ppt_runner2, *prev;
+  while (ppt_runner1 != NULL) {
+    ppt_runner2 = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_t));
+    assume_cp__picoquic_packet_t(ppt_runner1, ppt_runner2);
+    if (ppt_runner1 == src->retransmit_oldest)
+      dst->retransmit_oldest = ppt_runner2;
+    else {
+      prev->next_packet = ppt_runner2;
+      ppt_runner2->previous_packet = prev;
+    }
+
+    prev = ppt_runner2;
+    ppt_runner1 = ppt_runner1->next_packet;
+  }
+  dst->retransmit_newest = ppt_runner2;*/
+
   dst->retransmit_newest = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_t));
   dst->retransmit_oldest = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_t));
   dst->retransmitted_newest = (picoquic_packet_t*) malloc(sizeof(picoquic_packet_t));
@@ -749,8 +775,12 @@ inline void assert_cp__picoquic_cnx_t(picoquic_cnx_t *param1, picoquic_cnx_t *pa
   cond &= (flags & ASSERT_PICOQUIC_CNX_T__NB_PATHS) || (param1->nb_paths == param2->nb_paths);
   cond &= (flags & ASSERT_PICOQUIC_CNX_T__NB_PATH_ALLOC) || (param1->nb_path_alloc == param2->nb_path_alloc);
   sassert(cond);
-  for (int i=0; i<param1->nb_paths; i++)
-    assert_cp__picoquic_path_t(param1->path[i], param2->path[i], ASSERT_NONE);
+  picoquic_path_t **p1 = param1->path, **p2 = param2->path;
+  for (int i=0; i<param1->nb_paths; i++) {
+    assert_cp__picoquic_path_t(*p1, *p2, ASSERT_NONE);
+    p1++;
+    p2++;
+  }
   cond &= (flags & ASSERT_PICOQUIC_CNX_T__CORE_RATE) || (param1->core_rate == param2->core_rate);
   cond &= (flags & ASSERT_PICOQUIC_CNX_T__WAKE_NOW) || (param1->wake_now == param2->wake_now);
   cond &= (flags & ASSERT_PICOQUIC_CNX_T__PLUGIN_REQUESTED) || (param1->plugin_requested == param2->plugin_requested);
@@ -792,6 +822,15 @@ inline void assert_cp__picoquic_packet_context_t(picoquic_packet_context_t *para
   cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__LATEST_RETRANSMIT_CC_NOTIFICATION_TIME) || (param1->latest_retransmit_cc_notification_time == param2->latest_retransmit_cc_notification_time);
   cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__HIGHEST_ACKNOWLEDGED) || (param1->highest_acknowledged == param2->highest_acknowledged);
   cond &= (flags & ASSERT_PICOQUIC_PACKET_CONTEXT_T__LATEST_TIME_ACKNOWLEDGED) || (param1->latest_time_acknowledged == param2->latest_time_acknowledged);
+
+  /*picoquic_packet_t *ppt_runner1 = param1->retransmit_oldest, *ppt_runner2 = param2->retransmit_oldest;
+  while (ppt_runner1 != NULL && ppt_runner2 != NULL) {
+    assert_cp__picoquic_packet_t(ppt_runner1, ppt_runner2, ASSERT_NONE);
+    ppt_runner1 = ppt_runner1->next_packet;
+    ppt_runner2 = ppt_runner2->next_packet;
+  }
+  sassert(ppt_runner1 == NULL && ppt_runner2 == NULL);*/
+
   assert_cp__picoquic_packet_t(param1->retransmit_newest, param2->retransmit_newest, ASSERT_NONE);
   assert_cp__picoquic_packet_t(param1->retransmit_oldest, param2->retransmit_oldest, ASSERT_NONE);
   assert_cp__picoquic_packet_t(param1->retransmitted_newest, param2->retransmitted_newest, ASSERT_NONE);
