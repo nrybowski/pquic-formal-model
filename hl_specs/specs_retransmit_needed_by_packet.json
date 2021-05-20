@@ -1,0 +1,14 @@
+{
+	"name": "retransmit_needed_by_packet",
+	"inputs": {
+		"p": ["picoquic_packet_t", "*"],
+		"current_time": ["uint64_t"],
+		"timer_based": ["int"]
+	},
+	"outputs": {
+		"timer_based": ["int"],
+		"reason": ["char", "*"],
+		"retransmit_timer": ["uint64_t"]
+	},
+	"effects": {}
+}

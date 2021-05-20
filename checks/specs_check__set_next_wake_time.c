@@ -14,6 +14,9 @@ int main()
   set_next_wake_time(&cnx);
   sassert(current_time == ((uint64_t) cnx.protoop_inputv[0]));
   assert_cp__picoquic_cnx_t(&cnx, &cnx0, ASSERT_PICOQUIC_CNX_T__WAKE_NOW);
+#ifdef SASSERT_FALSE
+  sassert(0);
+#endif
   return 0;
 }
 

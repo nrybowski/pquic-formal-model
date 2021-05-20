@@ -1,0 +1,10 @@
+{
+	"name": "header_parsed",
+	"inputs": {
+		"ph": ["picoquic_packet_header", "*"],
+		"path": ["picoquic_path_t", "*"],
+		"length": ["size_t"]
+	},
+	"outputs": {},
+	"effects": {}
+}

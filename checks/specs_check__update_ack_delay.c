@@ -13,13 +13,13 @@ int main()
   picoquic_packet_context_t pkt_ctx0;
   init__picoquic_packet_context_t(&pkt_ctx);
   assume_cp__picoquic_packet_context_t(&pkt_ctx, &pkt_ctx0);
-  cnx.protoop_inputv[0] = (protoop_arg_t) (&pkt_ctx);
+  cnx.protoop_inputv[0] = (protoop_arg_t) &pkt_ctx;
 
   picoquic_path_t old_path;
   picoquic_path_t old_path0;
   init__picoquic_path_t(&old_path);
   assume_cp__picoquic_path_t(&old_path, &old_path0);
-  cnx.protoop_inputv[1] = (protoop_arg_t) (&old_path);
+  cnx.protoop_inputv[1] = (protoop_arg_t) &old_path;
 
   int64_t rtt_estimate;
   rtt_estimate = dummy__int64_t();

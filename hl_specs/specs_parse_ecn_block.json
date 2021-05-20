@@ -1,0 +1,11 @@
+{
+	"name": "parse_ecn_block",
+	"inputs": {
+		"bytes": ["uint8_t", "*"],
+		"bytes_max": ["size_t"]
+	},
+	"outputs": {
+		"block": ["void", "*"]
+	},
+	"effects": {}
+}

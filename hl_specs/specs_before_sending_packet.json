@@ -1,0 +1,11 @@
+{
+	"name": "before_sending_packet",
+	"inputs": {
+		"bytes": ["uint8_t", "*"],
+		"bytes_max": ["size_t"]
+	},
+	"outputs": {
+		"block": ["void", "*"]
+	},
+	"effects": {}
+}

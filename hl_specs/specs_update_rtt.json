@@ -1,0 +1,16 @@
+{
+	"name": "update_rtt",
+	"inputs": {
+		"largest": ["uint64_t"],
+		"current_time": ["uint64_t"],
+		"ack_delay": ["uint64_t"],
+		"pc": ["picoquic_packet_context_enum"],
+		"path_x": ["picoquic_path_t", "*"]
+	},
+	"outputs": {
+		"is_new_ack": ["bool"]
+	},
+	"effects": {
+		"cnx": ["latest_progress_time"]
+	}
+}

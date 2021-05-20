@@ -6,6 +6,7 @@
 		"rtt_estimate": ["int64_t"],
 		"first_estimate": ["bool"]
 	},
+	"outputs": {},
 	"effects": {
 		"pkt_ctx": ["ack_delay_local"]
 	}
