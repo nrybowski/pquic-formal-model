@@ -42,7 +42,7 @@ collect_data() {
 	mkdir -pv "${rundir}"
 	cd "${rundir}" || return
 	
-	for i in {0..4}
+	for i in {0..9}
 	do
 		echo "Run $i"
 
