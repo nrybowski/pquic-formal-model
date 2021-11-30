@@ -28,8 +28,10 @@ RUN echo horn | sudo -S DEBIAN_FRONTEND=noninteractive su -p - -c "apt-get insta
 
 WORKDIR /opt
 COPY ./pquic/picoquic pquic/picoquic
-#RUN echo horn | sudo -S mv pquic/picoquic/frames.c pquic/picoquic/frames.c.old
-#RUN echo horn | sudo -S mv pquic/picoquic/quicctx.c pquic/picoquic/quicctx.c.old
+RUN echo horn | sudo -S mv pquic/picoquic/frames.c pquic/picoquic/frames.c.old
+RUN echo horn | sudo -S mv pquic/picoquic/quicctx.c pquic/picoquic/quicctx.c.old
+RUN echo horn | sudo -S mv pquic/picoquic/memory.c pquic/picoquic/memory.c.old
+RUN echo horn | sudo -S mv pquic/picoquic/tls_api.c pquic/picoquic/tls_api.c.old
 
 COPY ./checks model/checks
 COPY ./verifier model/verifier
